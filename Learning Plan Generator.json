@@ -1,0 +1,702 @@
+{
+  "name": "Learning Plan Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Profile",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "e1725a12-9407-4c0c-ac87-bd676a5db313",
+      "name": "2a. Read Profile Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1168,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Huocm4PRnpE0Qbwx",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Set 'Document' to your Master Sheet ID. Tab name must be exactly 'Profile'."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1356494638,
+          "mode": "list",
+          "cachedResultName": "Bloom's Taxonomy",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit#gid=1356494638"
+        },
+        "options": {}
+      },
+      "id": "e6aef104-daae-4da4-abb4-3628ca89e391",
+      "name": "2b. Read Blooms Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1168,
+        320
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Huocm4PRnpE0Qbwx",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Set 'Document' to your Master Sheet ID. Tab name must be exactly 'Blooms'."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1813487297,
+          "mode": "list",
+          "cachedResultName": "Strategies",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit#gid=1813487297"
+        },
+        "options": {}
+      },
+      "id": "b299ad99-44a3-4dc3-a5e3-3c24bff422a3",
+      "name": "2c. Read Strategies Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1168,
+        496
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Huocm4PRnpE0Qbwx",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Set 'Document' to your Master Sheet ID. Tab name must be exactly 'Strategies'."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// NODE 3 — BUILD GEMINI PROMPT\n// Merges form input + profile + blooms + strategies\n// ============================================================\n\n// --- Pull form input from trigger node ---\nconst form = $('1. Form Response Trigger').first().json;\n\n// --- Pull profile data (key = col A, value = col B) ---\nconst profileRows = $('2a. Read Profile Tab').all().map(i => i.json);\nconst profile = {};\nprofileRows.forEach(row => {\n  if (row['key'] && row['value']) {                          // ✅ FIX 1\n    profile[row['key'].trim()] = String(row['value']).trim();\n  }\n});\n\n// --- Pull Bloom's data ---\nconst bloomsRows = $('2b. Read Blooms Tab').all().map(i => i.json);\nconst bloomsText = bloomsRows.map(r =>\n  `${r['level']}: ${r['all_verbs'] || ''}`                  // ✅ FIX 2\n).join('\\n');\n\n// --- Pull strategies ---\nconst stratRows = $('2c. Read Strategies Tab').all().map(i => i.json);\nconst strategiesText = stratRows.map(r =>\n  `- ${r['strategy']}: ${r['description']} (Best for: ${r['best_for']})`  // ✅ FIX 3\n).join('\\n');\n\n// Helper to get field value trimming key whitespace\nconst f = (key) => {\n  const match = Object.keys(form).find(k => k.trim() === key.trim());\n  return match ? (form[match] || '') : '';\n};\n\n// Convert Google Sheets date serial to real date string\nconst excelDateToString = (serial) => {\n  if (!serial || isNaN(serial)) return String(serial || '');\n  const date = new Date((serial - 25569) * 86400 * 1000);\n  return date.toISOString().split('T')[0]; // returns YYYY-MM-DD\n};\n\nconst unitTitle     = f('Unit Title');\nconst unitCode      = f('Unit Code');\nconst className     = f('Class Name');\nconst numLearners   = String(f('Number of Learners'));\nconst weekNo        = String(f('Week Number'));\nconst weekDate      = excelDateToString(f('Date of Week (Monday)'));\nconst skillTask     = f('Skill or Job Task');\nconst rawObjectives = f('Raw Learning Objectives');\nconst session1Title = f('Session 1 Title');\nconst session1Hints = f('Session 1 — Topic Hints') || f('Session 1 - Topic Hints');\nconst session2Title = f('Session 2 Title');\nconst session2Hints = f('Session 2 — Topic Hints') || f('Session 2 - Topic Hints');\nconst specialInstr  = f('Special Instructions for AI') || 'None';\n\nconst hasSession2 = session2Title.trim().length > 0;\n\n// --- Build the prompt ---\nconst prompt = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write in formal, assessor-ready language aligned to KSTVET standards.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\n\n=== BLOOM'S TAXONOMY VERBS (use these for all learning outcomes) ===\n${bloomsText}\n\nFor a Level 6 college class, PREFER verbs from levels 3-6 (Applying, Analysing, Evaluating, Creating).\nUse levels 1-2 only for introductory or foundational sessions.\n\n=== ACTIVE LEARNING STRATEGIES (use these for Trainee Activities) ===\n${strategiesText}\n\nAlways name the specific strategy used (e.g. \"Through Think-Pair-Share, trainees...\").\nEach session must use at least 2 different strategies.\n\n=== TEACHER INPUT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLearners: ${numLearners}\nWeek: ${weekNo}\nSkill/Job Task: ${skillTask}\nRaw Objectives: ${rawObjectives}\nSession 1 Title: ${session1Title}\nSession 1 Topic Hints: ${session1Hints}\n${hasSession2 ? `Session 2 Title: ${session2Title}\\nSession 2 Topic Hints: ${session2Hints}` : 'Session 2: NOT REQUIRED - leave session_2 fields as empty strings'}\nSpecial Instructions: ${specialInstr}\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON structure. All values must be strings.\n\n{\n  \"benchmarks\": \"4 benchmark statements separated by newlines, using Bloom's verbs (Define... / Identify... / Determine... / Apply...)\",\n  \"session_1_outcomes\": \"3-4 learning outcomes starting with Bloom's verbs, each on a new line, starting with a dash\",\n  \"session_1_keypoints\": \"Structured key learning points with sub-headings and bullet content, aligned to outcomes\",\n  \"session_1_activities\": \"Trainee activities naming the strategy used. Format: 'Through [Strategy], trainees will [action].' One per outcome.\",\n  \"session_1_references\": \"2-3 APA-formatted textbook references relevant to this topic\",\n  \"session_1_resources\": \"3-5 physical or digital resources (models, images, software, handouts etc.)\",\n  \"session_1_assessment\": \"Knowledge: [method]\\nSkill: [method]\\nAttitudes: [method]\",\n  \"session_2_outcomes\": \"\",\n  \"session_2_keypoints\": \"\",\n  \"session_2_activities\": \"\",\n  \"session_2_references\": \"\",\n  \"session_2_resources\": \"\",\n  \"session_2_assessment\": \"\"\n}\n`;\n\nreturn [{\n  json: {\n    prompt,\n    // Pass through all values needed for doc filling\n    unit_title: unitTitle,\n    unit_code: unitCode,\n    class_name: className,\n    num_learners: numLearners,\n    week_no: weekNo,\n    week_date: weekDate,\n    skill_task: skillTask,\n    session_1_title: session1Title,\n    session_2_title: session2Title,\n    has_session_2: hasSession2,\n    // Profile fields (pulled from Master Sheet Profile tab)\n    trainer_name: profile['trainer_name'] || '',\n    admission_no: profile['admission_no'] || '',\n    institution: profile['institution'] || '',\n    level: profile['level'] || '6',\n    ref_learning_plan: profile['ref_learning_plan'] || 'KSTVET/TP/LP/FO7',\n    template_doc_id: profile['learning_plan_template_id'] || '',\n    output_folder_id: profile['output_folder_id'] || '',\n    date_prepared: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })\n  }\n}];"
+      },
+      "id": "be2e5288-7f4e-450a-a286-2b2518fad3b4",
+      "name": "3. Build Gemini Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        352
+      ],
+      "notes": "SETUP: Check the form field names match exactly what Google Forms creates as column headers in your Response Sheet. Adjust the field mapping section if needed."
+    },
+    {
+      "parameters": {
+        "jsCode": "// NODE 5 — PARSE GEMINI RESPONSE\nconst rawText = $input.first().json.text;\n\n// Strip markdown code fences\nconst cleaned = rawText\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Parse JSON\nlet ai;\ntry {\n  ai = JSON.parse(cleaned);\n} catch(e) {\n  throw new Error('Failed to parse Gemini JSON: ' + cleaned.substring(0, 300));\n}\n\nconst prev = $('3. Build Gemini Prompt').first().json;\n\nreturn [{\n  json: {\n    '{{ref_learning_plan}}':        prev.ref_learning_plan,\n    '{{unit_title}}':               prev.unit_title,\n    '{{unit_code}}':                prev.unit_code,\n    '{{trainer_name}}':             prev.trainer_name,\n    '{{admission_no}}':             prev.admission_no,\n    '{{institution}}':              prev.institution,\n    '{{level}}':                    prev.level,\n    '{{date_prepared}}':            prev.date_prepared,\n    '{{num_learners}}':             prev.num_learners,\n    '{{class_name}}':               prev.class_name,\n    '{{skill_task}}':               prev.skill_task,\n    '{{week_no}}':                  prev.week_no,\n    '{{benchmarks}}':               ai.benchmarks,\n    '{{session_1_title}}':          prev.session_1_title,\n    '{{session_1_outcomes}}':       ai.session_1_outcomes,\n    '{{session_1_keypoints}}':      ai.session_1_keypoints,\n    '{{session_1_activities}}':     ai.session_1_activities,\n    '{{session_1_references}}':     ai.session_1_references,\n    '{{session_1_resources}}':      ai.session_1_resources,\n    '{{session_1_assessment}}':     ai.session_1_assessment,\n    '{{session_2_title}}':          prev.session_2_title,\n    '{{session_2_outcomes}}':       ai.session_2_outcomes,\n    '{{session_2_keypoints}}':      ai.session_2_keypoints,\n    '{{session_2_activities}}':     ai.session_2_activities,\n    '{{session_2_references}}':     ai.session_2_references,\n    '{{session_2_resources}}':      ai.session_2_resources,\n    '{{session_2_assessment}}':     ai.session_2_assessment,\n    // Pass-through for nodes 6, 7, 8\n    _template_doc_id:   prev.template_doc_id,\n    _output_folder_id:  prev.output_folder_id,\n    _class_name:        prev.class_name,\n    _week_no:           prev.week_no,\n    _unit_title:        prev.unit_title,\n    _week_date:         prev.week_date\n  }\n}];"
+      },
+      "id": "350ba6a2-cd8f-4e8f-9607-5be804d2a3ae",
+      "name": "5. Parse Gemini Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        352
+      ],
+      "notes": "This node extracts all AI-generated content and maps it to the exact placeholder names used in your Google Doc template."
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "=1pNXXHfXdcmWeOg4VjLRFE-a_1NFhQ5W4FEu-a-YiCwg",
+          "mode": "id"
+        },
+        "name": "==LP - {{ $json._class_name }} - Week {{ $json._week_no }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1N-OJ5I2SoI_3Y0JM7fB4aR8sdF6c2xRx",
+          "mode": "list",
+          "cachedResultName": "n8n learning plan automation",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1N-OJ5I2SoI_3Y0JM7fB4aR8sdF6c2xRx"
+        },
+        "options": {}
+      },
+      "id": "a49f4af2-7abc-44c5-80ea-6aa0f2b8202e",
+      "name": "6. Copy Template in Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        384,
+        352
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "VvodZaqvqOjyKo96",
+          "name": "Google Drive account"
+        }
+      },
+      "notes": "Copies your master template Doc into the output folder with a clean filename. The original template is never modified."
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 753944180,
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit#gid=753944180"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "A — Date Generated": "={{ $now.format('dd-MMM-yyyy') }}",
+            "B — Class": "={{ $('3. Build Gemini Prompt').first().json.class_name }}",
+            "C — Unit Title": "={{ $('3. Build Gemini Prompt').first().json.unit_title }}",
+            "D — Week": "={{ $('3. Build Gemini Prompt').first().json.week_no }}",
+            "E — Doc Type": "Learning Plan",
+            "F — Link": "=https://docs.google.com/document/d/{{ $('6. Copy Template in Drive').first().json.id }}/edit"
+          },
+          "matchingColumns": [
+            "A — Date Generated"
+          ],
+          "schema": [
+            {
+              "id": "A — Date Generated",
+              "displayName": "A — Date Generated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "B — Class",
+              "displayName": "B — Class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "C — Unit Title",
+              "displayName": "C — Unit Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "D — Week",
+              "displayName": "D — Week",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E — Doc Type",
+              "displayName": "E — Doc Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "F — Link",
+              "displayName": "F — Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "45b6cdb2-4a43-4e6b-a85b-1b6fde0888f5",
+      "name": "8a. Log to Master Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1568,
+        256
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Huocm4PRnpE0Qbwx",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Set 'Document' to your Master Sheet. Tab must be named exactly 'Log' with headers: Date Generated, Class, Unit Title, Week, Doc Type, Link"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "benmugo84@gmail.com",
+          "mode": "list",
+          "cachedResultName": "benmugo84@gmail.com"
+        },
+        "start": "={{ $('3. Build Gemini Prompt').first().json.week_date }}",
+        "end": "={{ $('3. Build Gemini Prompt').first().json.week_date }}",
+        "additionalFields": {
+          "allday": "yes",
+          "description": "==`📄 Learning Plan generated for {{ $('3. Build Gemini Prompt').first().json.unit_title }}\n\nOpen here:\nhttps://docs.google.com/document/d/{{ $('6. Copy Template in Drive').first().json.id }}/edit\n\nRemember: Review and edit before final submission.`",
+          "summary": "=📄 Learning Plan Ready — {{ $('3. Build Gemini Prompt').first().json.class_name }} Week {{ $('3. Build Gemini Prompt').first().json.week_no }}"
+        }
+      },
+      "id": "cd0c48f7-66d5-4fd6-8ebd-f4174dd66557",
+      "name": "8b. Create Calendar Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        416
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "rjVfEJR1cS1JRMxG",
+          "name": "Google Calendar account"
+        }
+      },
+      "notes": "Creates a calendar event on the Monday of the target week with a direct link to the generated doc. Color 2 = Sage green."
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1Ww5nPQTclaYsZsTxF4_fBjbv0nBnsPN3eDCw_7pIj2M",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Generator  (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ww5nPQTclaYsZsTxF4_fBjbv0nBnsPN3eDCw_7pIj2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1323607723,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ww5nPQTclaYsZsTxF4_fBjbv0nBnsPN3eDCw_7pIj2M/edit#gid=1323607723"
+        },
+        "options": {
+          "columnsToWatch": [
+            "Timestamp",
+            "Unit Title",
+            "Unit Code ",
+            "Number of Learners",
+            "Week Number",
+            "Class Name",
+            "Date of Week (Monday) ",
+            "Skill or Job Task",
+            "Raw Learning Objectives",
+            "Session 1 Title ",
+            "Session 1 — Topic Hints",
+            "Session 2 Title ",
+            "Session 2 — Topic Hints ",
+            "Special Instructions for AI"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        352
+      ],
+      "id": "f0b79aac-3000-4140-a5a6-90f35e34ab7b",
+      "name": "1. Form Response Trigger",
+      "retryOnFail": true,
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "6afDi1Ojg6Xy2J64",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -720,
+        336
+      ],
+      "id": "5c0f2fac-ca57-46e6-aea7-f491961bb573",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=={{ $('3. Build Gemini Prompt').first().json.prompt }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -224,
+        352
+      ],
+      "id": "4147dc22-0f32-45e1-9bca-5c59b29e8939",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        560
+      ],
+      "id": "23b6c219-98ad-43fc-b3e5-15407d516f3e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Uzh39jWMjDMHmHQN",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('5. Parse Gemini Response').first().json;\nconst docId = $('6. Copy Template in Drive').first().json.id;\n\nconst placeholders = [\n  ['{{ref_learning_plan}}',     p['{{ref_learning_plan}}']],\n  ['{{unit_title}}',            p['{{unit_title}}']],\n  ['{{unit_code}}',             p['{{unit_code}}']],\n  ['{{trainer_name}}',          p['{{trainer_name}}']],\n  ['{{admission_no}}',          p['{{admission_no}}']],\n  ['{{institution}}',           p['{{institution}}']],\n  ['{{level}}',                 p['{{level}}']],\n  ['{{date_prepared}}',         p['{{date_prepared}}']],\n  ['{{num_learners}}',          p['{{num_learners}}']],\n  ['{{class_name}}',            p['{{class_name}}']],\n  ['{{skill_task}}',            p['{{skill_task}}']],\n  ['{{week_no}}',               p['{{week_no}}']],\n  ['{{benchmarks}}',            p['{{benchmarks}}']],\n  ['{{session_1_title}}',       p['{{session_1_title}}']],\n  ['{{session_1_outcomes}}',    p['{{session_1_outcomes}}']],\n  ['{{session_1_keypoints}}',   p['{{session_1_keypoints}}']],\n  ['{{session_1_activities}}',  p['{{session_1_activities}}']],\n  ['{{session_1_references}}',  p['{{session_1_references}}']],\n  ['{{session_1_resources}}',   p['{{session_1_resources}}']],\n  ['{{session_1_assessment}}',  p['{{session_1_assessment}}']],\n  ['{{session_2_title}}',       p['{{session_2_title}}']],\n  ['{{session_2_outcomes}}',    p['{{session_2_outcomes}}']],\n  ['{{session_2_keypoints}}',   p['{{session_2_keypoints}}']],\n  ['{{session_2_activities}}',  p['{{session_2_activities}}']],\n  ['{{session_2_references}}',  p['{{session_2_references}}']],\n  ['{{session_2_resources}}',   p['{{session_2_resources}}']],\n  ['{{session_2_assessment}}',  p['{{session_2_assessment}}']],\n];\n\nconst requests = placeholders.map(([text, replaceText]) => ({\n  replaceAllText: {\n    containsText: { text, matchCase: true },\n    replaceText: String(replaceText || '')\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    body: { requests }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        352
+      ],
+      "id": "fb9eaf52-324a-4d29-bc60-e92d862fafdb",
+      "name": "Node 7a — Code node: Build Request Body"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.docId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        352
+      ],
+      "id": "62d64ec2-58c1-4787-b0cc-dc6ce1fc3ed7",
+      "name": "Node 7b — HTTP Request node",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "VvodZaqvqOjyKo96",
+          "name": "Google Drive account"
+        },
+        "googleDocsOAuth2Api": {
+          "id": "cgvASGJNccsTaCtD",
+          "name": "Google Docs account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "5. Parse Gemini Response": [
+      {
+        "json": {
+          "{{ref_learning_plan}}": "KSTVET/TP/LP/FO7",
+          "{{unit_title}}": "Understand Artificial Intelligence Concepts",
+          "{{unit_code}}": "ICT/OS/CS/CR/08/6/A",
+          "{{trainer_name}}": "Ben Mugo",
+          "{{admission_no}}": "2025cs162588",
+          "{{institution}}": "KINAP",
+          "{{level}}": "6",
+          "{{date_prepared}}": "19 Apr 2026",
+          "{{num_learners}}": "20",
+          "{{class_name}}": "CSMT",
+          "{{skill_task}}": "Apply AI concepts to solve real-world problems",
+          "{{week_no}}": "6",
+          "{{benchmarks}}": "Define Artificial Intelligence and differentiate it from human intelligence.\nIdentify and categorise the different types of Artificial Intelligence.\nEvaluate the current capabilities and limitations of existing AI technologies.\nApply AI concepts to propose solutions for real-world Kenyan problems.",
+          "{{session_1_title}}": "Introduction to Artificial Intelligence",
+          "{{session_1_outcomes}}": "- Define Artificial Intelligence and recall its fundamental principles.\n- Differentiate between Artificial Intelligence and human intelligence.\n- Identify relatable, real-world examples of Artificial Intelligence applications.\n- Explain the basic historical development of Artificial Intelligence.",
+          "{{session_1_keypoints}}": "## Definition and Core Concepts\n*   **What is AI?** The simulation of human intelligence processes by machines, especially computer systems.\n*   **Key Processes:** Learning, problem-solving, perception, language understanding.\n\n## AI vs. Human Intelligence\n*   **Human Intelligence:** Involves consciousness, emotions, creativity, intuition, and complex reasoning.\n*   **AI Intelligence:** Primarily based on algorithms, data processing, pattern recognition, and logical decision-making.\n\n## Historical Overview\n*   **Early Concepts:** From ancient myths of automata to early computational theories.\n*   **Key Milestones:** Dartmouth Workshop (1956), expert systems, machine learning revolution.\n\n## Relatable AI Examples\n*   **Personal Assistants:** Siri, Google Assistant (understanding voice commands, providing information).\n*   **Navigation Apps:** Google Maps, Waze (optimising routes, predicting traffic).\n*   **Recommendation Systems:** Netflix, YouTube (suggesting content based on user behaviour).\n*   **Online Search:** Google Search (understanding queries, ranking results).",
+          "{{session_1_activities}}": "Through Brainstorming, trainees will generate initial ideas about what Artificial Intelligence is and where they encounter it in their daily lives.\nThrough Think-Pair-Share, trainees will discuss and compare definitions of AI and its differences from human intelligence.\nThrough Group Discussion, trainees will explore and share real-world examples of AI applications they have personally experienced.",
+          "{{session_1_references}}": "Russell, S. J., & Norvig, P. (2020). *Artificial Intelligence: A Modern Approach* (4th ed.). Pearson.\nGoodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.\nKaplan, J. (2016). *Artificial Intelligence: What Everyone Needs to Know*. Oxford University Press.",
+          "{{session_1_resources}}": "Whiteboard or projector for definitions and discussions.\nImages illustrating AI applications (e.g., smart assistants, autonomous vehicles).\nShort video clips showcasing AI in action (e.g., demonstration of a recommendation system).\nHandout with key definitions and historical milestones.",
+          "{{session_1_assessment}}": "Knowledge: Short quiz on AI definitions and examples.\nSkill: Trainees will verbally explain one AI application and its function.\nAttitudes: Trainees will express curiosity and ask clarifying questions about AI concepts.",
+          "{{session_2_title}}": "Types of Artificial Intelligence",
+          "{{session_2_outcomes}}": "- Categorise Artificial Intelligence into Narrow, General, and Super AI.\n- Provide real-world examples for each category of AI.\n- Assess the current prevalence of each AI type in today's technology.\n- Predict potential future developments for General and Super AI.",
+          "{{session_2_keypoints}}": "## Types of Artificial Intelligence\n*   **Narrow AI (Weak AI):** Designed and trained for a specific task. Most AI applications today fall into this category.\n    *   Examples: Voice assistants (Siri, Alexa), image recognition software, recommendation engines, self-driving car systems (for specific driving tasks).\n*   **General AI (Strong AI):** AI with human-level cognitive abilities. Can understand, learn, and apply knowledge across a wide range of tasks, similar to a human.\n    *   Current Status: Largely theoretical; no true General AI exists yet.\n*   **Super AI:** AI that surpasses human intelligence and cognitive abilities in virtually all aspects, including creativity, general wisdom, and problem-solving.\n    *   Current Status: Hypothetical and a subject of much speculation and debate.\n\n## Current State and Future Outlook\n*   **Dominance of Narrow AI:** Emphasise that current advancements are primarily in specialized AI.\n*   **Challenges for General AI:** Discuss the complexities of achieving true general intelligence.\n*   **Ethical Considerations of Super AI:** Briefly touch upon potential implications.",
+          "{{session_2_activities}}": "Through Jigsaw, trainees will form expert groups to research and understand one type of AI (Narrow, General, or Super) and its characteristics.\nThrough Class Presentation, expert groups will then present their findings to the rest of the class, explaining their assigned AI type and providing examples.\nThrough Problem-Based Learning, trainees will be presented with a hypothetical scenario in Kenya and asked to identify which type of AI could be used to solve it.",
+          "{{session_2_references}}": "Goertzel, B. (2014). *Artificial General Intelligence: The Quest for a General Computable Intellect*. Springer.\nBostrom, N. (2014). *Superintelligence: Paths, Dangers, Strategies*. Oxford University Press.\nNg, A. (2019). *AI Transformation Playbook*. DeepLearning.AI.",
+          "{{session_2_resources}}": "Diagrams illustrating the differences between Narrow, General, and Super AI.\nCase studies of current Narrow AI applications in various industries.\nArticles or short videos discussing the theoretical concepts of General and Super AI.\nScenario cards for the Problem-Based Learning activity, with Kenyan contexts.",
+          "{{session_2_assessment}}": "Knowledge: Trainees will correctly identify the type of AI given a specific example.\nSkill: Trainees will verbally explain the key differences between Narrow and General AI.\nAttitudes: Trainees will demonstrate an understanding of the current limitations of AI and express informed opinions on future AI development.",
+          "_template_doc_id": "https://docs.google.com/document/d/1tFopAJ-OmN0ai-NtQX4waS7cNXYnZWXG/edit?usp=sharing&ouid=102155137259718206787&rtpof=true&sd=true",
+          "_output_folder_id": "Paste the Drive folder ID where generated docs should be saved",
+          "_class_name": "CSMT",
+          "_week_no": "6",
+          "_unit_title": "Understand Artificial Intelligence Concepts",
+          "_week_date": "2026-04-20"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "1. Form Response Trigger": [
+      {
+        "json": {
+          "row_number": 5,
+          "change_type": "updated",
+          "Timestamp": 46131.608089236106,
+          "Unit Title": "Understand Artificial Intelligence Concepts",
+          "Unit Code ": "ICT/OS/CS/CR/08/6/A",
+          "Class Name": "CSMT",
+          "Class Name 2": "CSMT",
+          "Number of Learners": 26,
+          "Week Number": 3,
+          "Date of Week (Monday) ": 46131,
+          "Skill or Job Task": "Apply AI concepts to solve real-world problems",
+          "Raw Learning Objectives": "Students should know what AI is",
+          "Session 1 Title ": "Introduction to Artificial Intelligence",
+          "Session 1 — Topic Hints": "Definition of AI, brief history, examples like Siri",
+          "Session 2 Title ": "",
+          "Session 2 — Topic Hints ": "",
+          "Special Instructions for AI": "Use relatable Japan examples"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "2a. Read Profile Tab": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2b. Read Blooms Tab": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "2c. Read Strategies Tab": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "3. Build Gemini Prompt": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Parse Gemini Response": {
+      "main": [
+        [
+          {
+            "node": "6. Copy Template in Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Copy Template in Drive": {
+      "main": [
+        [
+          {
+            "node": "Node 7a — Code node: Build Request Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Form Response Trigger": {
+      "main": [
+        [
+          {
+            "node": "2a. Read Profile Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2b. Read Blooms Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2c. Read Strategies Tab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "3. Build Gemini Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "5. Parse Gemini Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 7a — Code node: Build Request Body": {
+      "main": [
+        [
+          {
+            "node": "Node 7b — HTTP Request node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 7b — HTTP Request node": {
+      "main": [
+        [
+          {
+            "node": "8a. Log to Master Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "8b. Create Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7c68d86f-d4ae-4f61-8807-856b3b5feaf9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "105873a0e32e3c0a6d5d9f87c5dde92f4ed2f266a2db781ef0a25d96dc99deb8"
+  },
+  "id": "qL532rQ7l4NcxQMk",
+  "tags": []
+}
