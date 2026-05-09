@@ -24,7 +24,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -1168,
+        -1008,
         160
       ],
       "credentials": {
@@ -58,7 +58,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -1168,
+        -1008,
         320
       ],
       "credentials": {
@@ -92,7 +92,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -1168,
+        -1008,
         496
       ],
       "credentials": {
@@ -105,7 +105,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ============================================================\n// NODE 3 — BUILD GEMINI PROMPT\n// Merges form input + profile + blooms + strategies\n// ============================================================\n\n// --- Pull form input from trigger node ---\nconst form = $('1. Form Response Trigger').first().json;\n\n// --- Pull profile data (key = col A, value = col B) ---\nconst profileRows = $('2a. Read Profile Tab').all().map(i => i.json);\nconst profile = {};\nprofileRows.forEach(row => {\n  if (row['key'] && row['value']) {                          // ✅ FIX 1\n    profile[row['key'].trim()] = String(row['value']).trim();\n  }\n});\n\n// --- Pull Bloom's data ---\nconst bloomsRows = $('2b. Read Blooms Tab').all().map(i => i.json);\nconst bloomsText = bloomsRows.map(r =>\n  `${r['level']}: ${r['all_verbs'] || ''}`                  // ✅ FIX 2\n).join('\\n');\n\n// --- Pull strategies ---\nconst stratRows = $('2c. Read Strategies Tab').all().map(i => i.json);\nconst strategiesText = stratRows.map(r =>\n  `- ${r['strategy']}: ${r['description']} (Best for: ${r['best_for']})`  // ✅ FIX 3\n).join('\\n');\n\n// Helper to get field value trimming key whitespace\nconst f = (key) => {\n  const match = Object.keys(form).find(k => k.trim() === key.trim());\n  return match ? (form[match] || '') : '';\n};\n\n// Convert Google Sheets date serial to real date string\nconst excelDateToString = (serial) => {\n  if (!serial || isNaN(serial)) return String(serial || '');\n  const date = new Date((serial - 25569) * 86400 * 1000);\n  return date.toISOString().split('T')[0]; // returns YYYY-MM-DD\n};\n\nconst unitTitle     = f('Unit Title');\nconst unitCode      = f('Unit Code');\nconst className     = f('Class Name');\nconst numLearners   = String(f('Number of Learners'));\nconst weekNo        = String(f('Week Number'));\nconst weekDate      = excelDateToString(f('Date of Week (Monday)'));\nconst skillTask     = f('Skill or Job Task');\nconst rawObjectives = f('Raw Learning Objectives');\nconst session1Title = f('Session 1 Title');\nconst session1Hints = f('Session 1 — Topic Hints') || f('Session 1 - Topic Hints');\nconst session2Title = f('Session 2 Title');\nconst session2Hints = f('Session 2 — Topic Hints') || f('Session 2 - Topic Hints');\nconst specialInstr  = f('Special Instructions for AI') || 'None';\n\nconst hasSession2 = session2Title.trim().length > 0;\n\n// --- Build the prompt ---\nconst prompt = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write in formal, assessor-ready language aligned to KSTVET standards.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\n\n=== BLOOM'S TAXONOMY VERBS (use these for all learning outcomes) ===\n${bloomsText}\n\nFor a Level 6 college class, PREFER verbs from levels 3-6 (Applying, Analysing, Evaluating, Creating).\nUse levels 1-2 only for introductory or foundational sessions.\n\n=== ACTIVE LEARNING STRATEGIES (use these for Trainee Activities) ===\n${strategiesText}\n\nAlways name the specific strategy used (e.g. \"Through Think-Pair-Share, trainees...\").\nEach session must use at least 2 different strategies.\n\n=== TEACHER INPUT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLearners: ${numLearners}\nWeek: ${weekNo}\nSkill/Job Task: ${skillTask}\nRaw Objectives: ${rawObjectives}\nSession 1 Title: ${session1Title}\nSession 1 Topic Hints: ${session1Hints}\n${hasSession2 ? `Session 2 Title: ${session2Title}\\nSession 2 Topic Hints: ${session2Hints}` : 'Session 2: NOT REQUIRED - leave session_2 fields as empty strings'}\nSpecial Instructions: ${specialInstr}\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON structure. All values must be strings.\n\n{\n  \"benchmarks\": \"4 benchmark statements separated by newlines, using Bloom's verbs (Define... / Identify... / Determine... / Apply...)\",\n  \"session_1_outcomes\": \"3-4 learning outcomes starting with Bloom's verbs, each on a new line, starting with a dash\",\n  \"session_1_keypoints\": \"Structured key learning points with sub-headings and bullet content, aligned to outcomes\",\n  \"session_1_activities\": \"Trainee activities naming the strategy used. Format: 'Through [Strategy], trainees will [action].' One per outcome.\",\n  \"session_1_references\": \"2-3 APA-formatted textbook references relevant to this topic\",\n  \"session_1_resources\": \"3-5 physical or digital resources (models, images, software, handouts etc.)\",\n  \"session_1_assessment\": \"Knowledge: [method]\\nSkill: [method]\\nAttitudes: [method]\",\n  \"session_2_outcomes\": \"\",\n  \"session_2_keypoints\": \"\",\n  \"session_2_activities\": \"\",\n  \"session_2_references\": \"\",\n  \"session_2_resources\": \"\",\n  \"session_2_assessment\": \"\"\n}\n`;\n\nreturn [{\n  json: {\n    prompt,\n    // Pass through all values needed for doc filling\n    unit_title: unitTitle,\n    unit_code: unitCode,\n    class_name: className,\n    num_learners: numLearners,\n    week_no: weekNo,\n    week_date: weekDate,\n    skill_task: skillTask,\n    session_1_title: session1Title,\n    session_2_title: session2Title,\n    has_session_2: hasSession2,\n    // Profile fields (pulled from Master Sheet Profile tab)\n    trainer_name: profile['trainer_name'] || '',\n    admission_no: profile['admission_no'] || '',\n    institution: profile['institution'] || '',\n    level: profile['level'] || '6',\n    ref_learning_plan: profile['ref_learning_plan'] || 'KSTVET/TP/LP/FO7',\n    template_doc_id: profile['learning_plan_template_id'] || '',\n    output_folder_id: profile['output_folder_id'] || '',\n    date_prepared: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })\n  }\n}];"
+        "jsCode": "// ============================================================\n// NODE 3 — BUILD GEMINI PROMPT\n// Merges form input + profile + blooms + strategies\n// ============================================================\n\n// --- Pull form input — works in both test and live mode ---\nconst form = $('1. Form Response Trigger').first().json;\n\n// --- Pull profile data ---\nconst profileRows = $('2a. Read Profile Tab').all().map(i => i.json);\nconst profile = {};\nprofileRows.forEach(row => {\n  if (row['key'] && row['value']) {\n    profile[row['key'].trim()] = String(row['value']).trim();\n  }\n});\n\n// --- Pull Bloom's data ---\nconst bloomsRows = $('2b. Read Blooms Tab').all().map(i => i.json);\nconst bloomsText = bloomsRows.map(r =>\n  `${r['level']}: ${r['all_verbs'] || ''}`\n).join('\\n');\n\n// --- Pull strategies ---\nconst stratRows = $('2c. Read Strategies Tab').all().map(i => i.json);\nconst strategiesText = stratRows.map(r =>\n  `- ${r['strategy']}: ${r['description']} (Best for: ${r['best_for']})`\n).join('\\n');\n\n// --- Helper: find field regardless of trailing spaces or dash type ---\nconst f = (key) => {\n  const normalise = s => s.trim().replace(/\\u2014/g, '-').replace(/\\u2013/g, '-');\n  const match = Object.keys(form).find(k => normalise(k) === normalise(key));\n  return match ? String(form[match] || '').trim() : '';\n};\n\n// --- Helper: convert Google Sheets date serial to YYYY-MM-DD ---\nconst excelDateToString = (serial) => {\n  if (!serial || isNaN(Number(serial))) return String(serial || '');\n  const date = new Date((Number(serial) - 25569) * 86400 * 1000);\n  return date.toISOString().split('T')[0];\n};\n\n// --- Form fields ---\nconst unitTitle     = f('Unit Title');\nconst unitCode      = f('Unit Code');\nconst className     = f('Class Name');\nconst numLearners   = String(f('Number of Learners'));\nconst weekNo        = String(f('Week Number'));\nconst weekDate      = excelDateToString(f('Date of Week (Monday)'));\nconst skillTask     = f('Skill or Job Task');\nconst rawObjectives = f('Raw Learning Objectives');\nconst session1Title = f('Session 1 Title');\nconst session1Hints = f('Session 1 - Topic Hints');\nconst session2Title = f('Session 2 Title');\nconst session2Hints = f('Session 2 - Topic Hints');\nconst specialInstr  = f('Special Instructions for AI') || 'None';\n\n// --- Debug ---\nconsole.log('session2Title:', JSON.stringify(session2Title));\nconsole.log('session2Title length:', session2Title.length);\n\nconst hasSession2 = session2Title.length > 0;\nconsole.log('hasSession2:', hasSession2);\n\n// --- Build the prompt ---\nconst prompt = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write in formal, assessor-ready language aligned to KSTVET standards.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\nDo NOT use markdown formatting in any field values. No ##, no **, no *, no -- bullets.\nFor section headings use CAPS. For lists use numbers (1. 2. 3.) or letters (a. b. c.).\nWrite in flowing, formal prose where possible. This content goes into Google Docs directly.\n\n=== BLOOM'S TAXONOMY VERBS (use these for all learning outcomes) ===\n${bloomsText}\n\nFor a Level 6 college class, PREFER verbs from levels 3-6 (Applying, Analysing, Evaluating, Creating).\nUse levels 1-2 only for introductory or foundational sessions.\n\n=== ACTIVE LEARNING STRATEGIES (use these for Trainee Activities) ===\n${strategiesText}\n\nAlways name the specific strategy used (e.g. \"Through Think-Pair-Share, trainees...\").\nEach session must use at least 2 different strategies.\n\n=== TEACHER INPUT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLearners: ${numLearners}\nWeek: ${weekNo}\nSkill/Job Task: ${skillTask}\nRaw Objectives: ${rawObjectives}\nSession 1 Title: ${session1Title}\nSession 1 Topic Hints: ${session1Hints}\n${hasSession2\n  ? `Session 2 Title: ${session2Title}\\nSession 2 Topic Hints: ${session2Hints}`\n  : 'Session 2: NOT REQUIRED — leave all session_2 fields as empty strings'}\nSpecial Instructions: ${specialInstr}\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON structure. All values must be strings.\n\n{\n  \"benchmarks\": \"4 benchmark statements separated by newlines, using Bloom's verbs (Define... / Identify... / Determine... / Apply...)\",\n  \"session_1_outcomes\": \"3-4 learning outcomes starting with Bloom's verbs, each on a new line, starting with a dash\",\n  \"session_1_keypoints\": \"Structured key learning points with sub-headings and bullet content, aligned to outcomes\",\n  \"session_1_activities\": \"Trainee activities naming the strategy used. Format: 'Through [Strategy], trainees will [action].' One per outcome.\",\n  \"session_1_references\": \"2-3 APA-formatted textbook references relevant to this topic\",\n  \"session_1_resources\": \"3-5 physical or digital resources (models, images, software, handouts etc.)\",\n  \"session_1_assessment\": \"Knowledge: [method]\\nSkill: [method]\\nAttitudes: [method]\",\n  \"session_2_outcomes\": \"${hasSession2 ? '3-4 outcomes for session 2' : ''}\",\n  \"session_2_keypoints\": \"${hasSession2 ? 'Key points for session 2' : ''}\",\n  \"session_2_activities\": \"${hasSession2 ? 'Activities for session 2' : ''}\",\n  \"session_2_references\": \"${hasSession2 ? 'References for session 2' : ''}\",\n  \"session_2_resources\": \"${hasSession2 ? 'Resources for session 2' : ''}\",\n  \"session_2_assessment\": \"${hasSession2 ? 'Assessment for session 2' : ''}\"\n}\n`;\n\nreturn [{\n  json: {\n    prompt,\n    unit_title: unitTitle,\n    unit_code: unitCode,\n    class_name: className,\n    num_learners: numLearners,\n    week_no: weekNo,\n    week_date: weekDate,\n    skill_task: skillTask,\n    session_1_title: session1Title,\n    session_2_title: session2Title,\n    has_session_2: hasSession2,\n    trainer_name: profile['trainer_name'] || '',\n    admission_no: profile['admission_no'] || '',\n    institution: profile['institution'] || '',\n    level: profile['level'] || '6',\n    ref_learning_plan: profile['ref_learning_plan'] || 'KSTVET/TP/LP/FO7',\n    template_doc_id: profile['learning_plan_template_id'] || '',\n    output_folder_id: profile['output_folder_id'] || '',\n    date_prepared: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })\n  }\n}];"
       },
       "id": "be2e5288-7f4e-450a-a286-2b2518fad3b4",
       "name": "3. Build Gemini Prompt",
@@ -126,8 +126,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        128,
-        352
+        208,
+        336
       ],
       "notes": "This node extracts all AI-generated content and maps it to the exact placeholder names used in your Google Doc template."
     },
@@ -136,7 +136,7 @@
         "operation": "copy",
         "fileId": {
           "__rl": true,
-          "value": "=1pNXXHfXdcmWeOg4VjLRFE-a_1NFhQ5W4FEu-a-YiCwg",
+          "value": "={{ $json._template_doc_id }}",
           "mode": "id"
         },
         "name": "==LP - {{ $json._class_name }} - Week {{ $json._week_no }}",
@@ -160,8 +160,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        384,
-        352
+        464,
+        336
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -356,8 +356,8 @@
       "type": "n8n-nodes-base.googleSheetsTrigger",
       "typeVersion": 1,
       "position": [
-        -1408,
-        352
+        -1664,
+        576
       ],
       "id": "f0b79aac-3000-4140-a5a6-90f35e34ab7b",
       "name": "1. Form Response Trigger",
@@ -386,14 +386,14 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=={{ $('3. Build Gemini Prompt').first().json.prompt }}",
+        "text": "=={{ $if($('3. Build Gemini Prompt').isExecuted, $('3. Build Gemini Prompt').first().json.prompt, $('SP Node 3 — Code node').first().json.prompt) }}",
         "batching": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        -224,
-        352
+        -160,
+        576
       ],
       "id": "4147dc22-0f32-45e1-9bca-5c59b29e8939",
       "name": "Basic LLM Chain"
@@ -406,8 +406,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -288,
-        560
+        -176,
+        784
       ],
       "id": "23b6c219-98ad-43fc-b3e5-15407d516f3e",
       "name": "Google Gemini Chat Model",
@@ -425,8 +425,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        704,
-        352
+        784,
+        336
       ],
       "id": "fb9eaf52-324a-4d29-bc60-e92d862fafdb",
       "name": "Node 7a — Code node: Build Request Body"
@@ -454,8 +454,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1040,
-        352
+        1072,
+        336
       ],
       "id": "62d64ec2-58c1-4787-b0cc-dc6ce1fc3ed7",
       "name": "Node 7b — HTTP Request node",
@@ -469,71 +469,514 @@
           "name": "Google Docs account 2"
         }
       }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['Document Type'] }}",
+                    "rightValue": "Learning Plan",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c64c85ad-3ebf-47f2-a263-61cc33d78e04"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7403f7cf-0688-494e-b0c0-e73e18d4a77a",
+                    "leftValue": "={{ $json['Document Type'] }}",
+                    "rightValue": "Session Plan",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1472,
+        576
+      ],
+      "id": "b5e5909b-2b9e-47b7-a52e-2bcc262b7378",
+      "name": "Switch (Document Type)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// NODE 3b — BUILD SESSION PLAN GEMINI PROMPT\n// ============================================================\n\nconst form = $('1. Form Response Trigger').first().json;\n\n// Same helper functions from LP\nconst f = (key) => {\n  const match = Object.keys(form).find(k => k.trim() === key.trim());\n  return match ? (form[match] || '') : '';\n};\n\nconst excelDateToString = (serial) => {\n  if (!serial || isNaN(serial)) return String(serial || '');\n  const date = new Date((serial - 25569) * 86400 * 1000);\n  return date.toISOString().split('T')[0];\n};\n\n// Pull profile\nconst profileRows = $('2a-SP. Read Profile Tab').all().map(i => i.json);\nconst profile = {};\nprofileRows.forEach(row => {\n  if (row['key'] && row['value']) {\n    profile[row['key'].trim()] = String(row['value']).trim();\n  }\n});\n\n// Pull Bloom's\nconst bloomsRows = $('2b-SP. Read Blooms Tab').all().map(i => i.json);\nconst bloomsText = bloomsRows.map(r =>\n  `${r['level']}: ${r['all_verbs'] || ''}`\n).join('\\n');\n\n// Pull strategies\nconst stratRows = $('2c-SP. Read Strategies Tab').all().map(i => i.json);\nconst strategiesText = stratRows.map(r =>\n  `- ${r['strategy']}: ${r['description']} (Best for: ${r['best_for']})`\n).join('\\n');\n\n// Form fields\nconst unitTitle       = f('Unit Title');\nconst unitCode        = f('Unit Code');\nconst className       = f('Class Name');\nconst numLearners     = String(f('Number of Learners'));\nconst weekNo          = String(f('Week Number'));\nconst sessionDate     = excelDateToString(f('Session Date'));\nconst sessionTime     = f('Session Time');\nconst sessionTitle    = f('Session Title');\nconst sessionHints    = f('Session Topic Hints');\nconst lpContext       = f('LP Outcomes and Key Points');\nconst llnReq          = f('LLN Requirements') || 'N/A';\nconst specialInstr    = f('Special Instructions for AI') || 'None';\n\nconst prompt = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write in formal, assessor-ready language aligned to KSTVET standards.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\nDo NOT use markdown formatting in any field values. No ##, no **, no *, no -- bullets.\nFor section headings use CAPS. For lists use numbers (1. 2. 3.) or letters (a. b. c.).\nWrite in flowing, formal prose where possible. This content goes into Google Docs directly.\n\n=== BLOOM'S TAXONOMY VERBS ===\n${bloomsText}\n\nFor Level 6, PREFER verbs from levels 3-6 (Applying, Analysing, Evaluating, Creating).\n\n=== ACTIVE LEARNING STRATEGIES ===\n${strategiesText}\n\nAlways name the specific strategy used. Each step must use a named strategy.\n\n=== LEARNING PLAN CONTEXT (this SP must align with this LP) ===\n${lpContext}\n\n=== TEACHER INPUT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLearners: ${numLearners}\nWeek: ${weekNo}\nSession Title: ${sessionTitle}\nSession Topic Hints: ${sessionHints}\nLLN Requirements: ${llnReq}\nSpecial Instructions: ${specialInstr}\n\n=== SESSION STRUCTURE ===\nGenerate a 3-hour session (180 minutes total) with this structure:\n- Introduction: 10 mins\n- Step 1: 40 mins\n- Step 2a: 40 mins\n- Step 2b: 40 mins\n- Step 3: 40 mins\n- Session Review: 10 mins\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON. All values must be strings.\n\n{\n  \"learning_outcomes\": \"3-4 outcomes starting with Bloom's verbs, each on new line starting with dash\",\n  \"references\": \"2-3 APA formatted references relevant to this topic\",\n  \"learning_aids\": \"3-5 physical or digital learning aids\",\n  \"safety_requirements\": \"relevant safety requirements for this session\",\n  \"intro_activity\": \"What trainer does in introduction — board work, attendance, recap, bridge-in\",\n  \"step1_trainer\": \"Trainer activity for Step 1 with named strategy\",\n  \"step1_trainee\": \"Trainee activity for Step 1 with named strategy\",\n  \"step1_time\": \"40 mins\",\n  \"step2a_trainer\": \"Trainer activity for Step 2a with named strategy\",\n  \"step2a_trainee\": \"Trainee activity for Step 2a with named strategy\",\n  \"step2a_time\": \"40 mins\",\n  \"step2b_trainer\": \"Trainer activity for Step 2b with named strategy\",\n  \"step2b_trainee\": \"Trainee activity for Step 2b with named strategy\",\n  \"step2b_time\": \"40 mins\",\n  \"step3_trainer\": \"Trainer activity for Step 3 with named strategy\",\n  \"step3_trainee\": \"Trainee activity for Step 3 with named strategy\",\n  \"step3_time\": \"40 mins\",\n  \"session_review\": \"How trainer and trainees summarise the session\",\n  \"follow_up\": \"Extended activity or homework for trainees\",\n  \"total_time\": \"180 mins\"\n}\n`;\n\nreturn [{\n  json: {\n    prompt,\n    unit_title: unitTitle,\n    unit_code: unitCode,\n    class_name: className,\n    num_learners: numLearners,\n    week_no: weekNo,\n    session_date: sessionDate,\n    session_time: sessionTime,\n    session_title: sessionTitle,\n    trainer_name: profile['trainer_name'] || '',\n    admission_no: profile['admission_no'] || '',\n    institution: profile['institution'] || '',\n    level: profile['level'] || '6',\n    template_doc_id: profile['session_plan_template_id'] || '',\n    output_folder_id: profile['output_folder_id'] || '',\n    date_prepared: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        816
+      ],
+      "id": "9a624281-044d-4323-bc58-52cb660cd482",
+      "name": "SP Node 3 — Code node"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Profile",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "e08a6e13-9858-47fb-a33d-b25edefb571b",
+      "name": "2a-SP. Read Profile Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1008,
+        672
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Huocm4PRnpE0Qbwx",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Set 'Document' to your Master Sheet ID. Tab name must be exactly 'Profile'."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1356494638,
+          "mode": "list",
+          "cachedResultName": "Bloom's Taxonomy",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit#gid=1356494638"
+        },
+        "options": {}
+      },
+      "id": "376cafe7-022d-48a9-b9cf-fe79f2d2f6fc",
+      "name": "2b-SP. Read Blooms Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1008,
+        832
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Huocm4PRnpE0Qbwx",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Set 'Document' to your Master Sheet ID. Tab name must be exactly 'Blooms'."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1813487297,
+          "mode": "list",
+          "cachedResultName": "Strategies",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit#gid=1813487297"
+        },
+        "options": {}
+      },
+      "id": "11c55131-4bfa-4734-96d4-1ffdeaf7354d",
+      "name": "2c-SP. Read Strategies Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1008,
+        1008
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Huocm4PRnpE0Qbwx",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Set 'Document' to your Master Sheet ID. Tab name must be exactly 'Strategies'."
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -736,
+        800
+      ],
+      "id": "f4372201-1b2c-4e7f-a215-6394827be002",
+      "name": "Merge-SP"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json._template_doc_id }}",
+          "mode": "id"
+        },
+        "name": "==SP - {{ $json._class_name }} - Week {{ $json._week_no }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1N-OJ5I2SoI_3Y0JM7fB4aR8sdF6c2xRx",
+          "mode": "list",
+          "cachedResultName": "n8n learning plan automation",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1N-OJ5I2SoI_3Y0JM7fB4aR8sdF6c2xRx"
+        },
+        "options": {}
+      },
+      "id": "c8eb0d6a-1415-4ac6-8a74-9321d371280c",
+      "name": "SP Node 6b",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        464,
+        800
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "VvodZaqvqOjyKo96",
+          "name": "Google Drive account"
+        }
+      },
+      "notes": "Copies your master template Doc into the output folder with a clean filename. The original template is never modified."
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('SP Node 5b').first().json;\nconst docId = $('SP Node 6b').first().json.id;\n\nconst placeholders = [\n  ['{{unit_title}}',          p['{{unit_title}}']],\n  ['{{unit_code}}',           p['{{unit_code}}']],\n  ['{{trainer_name}}',        p['{{trainer_name}}']],\n  ['{{admission_no}}',        p['{{admission_no}}']],\n  ['{{institution}}',         p['{{institution}}']],\n  ['{{level}}',               p['{{level}}']],\n  ['{{class_name}}',          p['{{class_name}}']],\n  ['{{num_learners}}',        p['{{num_learners}}']],\n  ['{{week_no}}',             p['{{week_no}}']],\n  ['{{session_date}}',        p['{{session_date}}']],\n  ['{{session_time}}',        p['{{session_time}}']],\n  ['{{session_title}}',       p['{{session_title}}']],\n  ['{{learning_outcomes}}',   p['{{learning_outcomes}}']],\n  ['{{references}}',          p['{{references}}']],\n  ['{{learning_aids}}',       p['{{learning_aids}}']],\n  ['{{safety_requirements}}', p['{{safety_requirements}}']],\n  ['{{intro_activity}}',      p['{{intro_activity}}']],\n  ['{{step1_trainer}}',       p['{{step1_trainer}}']],\n  ['{{step1_trainee}}',       p['{{step1_trainee}}']],\n  ['{{step1_time}}',          p['{{step1_time}}']],\n  ['{{step2a_trainer}}',      p['{{step2a_trainer}}']],\n  ['{{step2a_trainee}}',      p['{{step2a_trainee}}']],\n  ['{{step2a_time}}',         p['{{step2a_time}}']],\n  ['{{step2b_trainer}}',      p['{{step2b_trainer}}']],\n  ['{{step2b_trainee}}',      p['{{step2b_trainee}}']],\n  ['{{step2b_time}}',         p['{{step2b_time}}']],\n  ['{{step3_trainer}}',       p['{{step3_trainer}}']],\n  ['{{step3_trainee}}',       p['{{step3_trainee}}']],\n  ['{{step3_time}}',          p['{{step3_time}}']],\n  ['{{session_review}}',      p['{{session_review}}']],\n  ['{{follow_up}}',           p['{{follow_up}}']],\n  ['{{total_time}}',          p['{{total_time}}']],\n];\n\nconst requests = placeholders.map(([text, replaceText]) => ({\n  replaceAllText: {\n    containsText: { text, matchCase: true },\n    replaceText: String(replaceText || '')\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    body: { requests }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        800
+      ],
+      "id": "b3d6fc91-6f9e-4a45-a395-e3c9cf7f2d5c",
+      "name": "SP Node 7a"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// NODE 5b — PARSE SESSION PLAN GEMINI RESPONSE\n// ============================================================\n\nconst rawText = $input.first().json.text;\n\n// Strip markdown code fences\nconst cleaned = rawText\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Parse JSON\nlet ai;\ntry {\n  ai = JSON.parse(cleaned);\n} catch(e) {\n  throw new Error('Failed to parse Gemini JSON: ' + cleaned.substring(0, 300));\n}\n\nconst prev = $('SP Node 3 — Code node').first().json;\n\nreturn [{\n  json: {\n    '{{unit_title}}':       prev.unit_title,\n    '{{unit_code}}':        prev.unit_code,\n    '{{trainer_name}}':     prev.trainer_name,\n    '{{admission_no}}':     prev.admission_no,\n    '{{institution}}':      prev.institution,\n    '{{level}}':            prev.level,\n    '{{class_name}}':       prev.class_name,\n    '{{num_learners}}':     prev.num_learners,\n    '{{week_no}}':          prev.week_no,\n    '{{session_date}}':     prev.session_date,\n    '{{session_time}}':     prev.session_time,\n    '{{session_title}}':    prev.session_title,\n    '{{learning_outcomes}}': ai.learning_outcomes,\n    '{{references}}':       ai.references,\n    '{{learning_aids}}':    ai.learning_aids,\n    '{{safety_requirements}}': ai.safety_requirements,\n    '{{intro_activity}}':   ai.intro_activity,\n    '{{step1_trainer}}':    ai.step1_trainer,\n    '{{step1_trainee}}':    ai.step1_trainee,\n    '{{step1_time}}':       ai.step1_time,\n    '{{step2a_trainer}}':   ai.step2a_trainer,\n    '{{step2a_trainee}}':   ai.step2a_trainee,\n    '{{step2a_time}}':      ai.step2a_time,\n    '{{step2b_trainer}}':   ai.step2b_trainer,\n    '{{step2b_trainee}}':   ai.step2b_trainee,\n    '{{step2b_time}}':      ai.step2b_time,\n    '{{step3_trainer}}':    ai.step3_trainer,\n    '{{step3_trainee}}':    ai.step3_trainee,\n    '{{step3_time}}':       ai.step3_time,\n    '{{session_review}}':   ai.session_review,\n    '{{follow_up}}':        ai.follow_up,\n    '{{total_time}}':       ai.total_time,\n    // Pass-through for next nodes\n    _template_doc_id:   prev.template_doc_id,\n    _output_folder_id:  prev.output_folder_id,\n    _class_name:        prev.class_name,\n    _week_no:           prev.week_no,\n    _unit_title:        prev.unit_title,\n    _session_date:      prev.session_date,\n    _session_title:     prev.session_title\n  }\n}];"
+      },
+      "id": "e73ec9d9-754a-44ae-bfe6-c290288328b4",
+      "name": "SP Node 5b",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        800
+      ],
+      "notes": "This node extracts all AI-generated content and maps it to the exact placeholder names used in your Google Doc template."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.docId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        800
+      ],
+      "id": "495ede36-1b4a-464c-8ce5-bb8799277e2d",
+      "name": "Node 7b — HTTP Request node1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "VvodZaqvqOjyKo96",
+          "name": "Google Drive account"
+        },
+        "googleDocsOAuth2Api": {
+          "id": "cgvASGJNccsTaCtD",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
+          "mode": "list",
+          "cachedResultName": "Learning Plan Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 753944180,
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE/edit#gid=753944180"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "A — Date Generated": "={{ $now.format('dd-MMM-yyyy') }}",
+            "B — Class": "={{ $('SP Node 3 — Code node').first().json.class_name }}",
+            "C — Unit Title": "={{ $('SP Node 3 — Code node').first().json.unit_title }}",
+            "D — Week": "={{ $('SP Node 3 — Code node').first().json.week_no }}",
+            "E — Doc Type": "Session Plan",
+            "F — Link": "=https://docs.google.com/document/d/{{ $('SP Node 6b').first().json.id }}/edit"
+          },
+          "matchingColumns": [
+            "A — Date Generated"
+          ],
+          "schema": [
+            {
+              "id": "A — Date Generated",
+              "displayName": "A — Date Generated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "B — Class",
+              "displayName": "B — Class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "C — Unit Title",
+              "displayName": "C — Unit Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "D — Week",
+              "displayName": "D — Week",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E — Doc Type",
+              "displayName": "E — Doc Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "F — Link",
+              "displayName": "F — Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "453d41d2-6022-4f58-89ec-878f933abe97",
+      "name": "8a. Log to Master Sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1568,
+        688
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Huocm4PRnpE0Qbwx",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "SETUP: Set 'Document' to your Master Sheet. Tab must be named exactly 'Log' with headers: Date Generated, Class, Unit Title, Week, Doc Type, Link"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "benmugo84@gmail.com",
+          "mode": "list",
+          "cachedResultName": "benmugo84@gmail.com"
+        },
+        "start": "=={{ $('SP Node 3 — Code node').first().json.session_date }}",
+        "end": "=={{ $('SP Node 3 — Code node').first().json.session_date }}",
+        "additionalFields": {
+          "allday": "yes",
+          "description": "==\\📄 Session Plan generated for {{ $('SP Node 3 — Code node').first().json.session_title }}\n\nOpen here:\nhttps://docs.google.com/document/d/{{ $('SP Node 6b').first().json.id }}/edit\n\nRemember: Review and edit before delivery.``",
+          "summary": "==📄 Session Plan Ready — {{ $('SP Node 3 — Code node').first().json.class_name }} Week {{ $('SP Node 3 — Code node').first().json.week_no }}"
+        }
+      },
+      "id": "f2266547-eae2-4715-bcf2-495045e67ed8",
+      "name": "8b. Create Calendar Event1",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        848
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "rjVfEJR1cS1JRMxG",
+          "name": "Google Calendar account"
+        }
+      },
+      "notes": "Creates a calendar event on the Monday of the target week with a direct link to the generated doc. Color 2 = Sage green."
     }
   ],
   "pinData": {
-    "5. Parse Gemini Response": [
+    "1. Form Response Trigger": [
       {
         "json": {
-          "{{ref_learning_plan}}": "KSTVET/TP/LP/FO7",
+          "Document Type": "Learning Plan",
+          "Timestamp": "2026-04-19T10:00:00.000Z",
+          "Unit Title": "Understand Artificial Intelligence Concepts",
+          "Unit Code": "ICT/OS/CS/CR/08/6/A",
+          "Class Name": "CSMT",
+          "Number of Learners": "20",
+          "Week Number": "6",
+          "Date of Week (Monday)": "2026-04-20",
+          "Skill or Job Task": "Apply AI concepts to solve real-world problems",
+          "Raw Learning Objectives": "Students should know what AI is\nUnderstand the types of AI\nSee how AI is used in real life\nAppreciate the ethical impact of AI on society",
+          "Session 1 Title": "Introduction to Artificial Intelligence",
+          "Session 1 - Topic Hints": "Definition of AI, brief history, difference between AI and human intelligence, examples students can relate to like Siri and Google Maps",
+          "Session 2 Title": "Types of Artificial Intelligence",
+          "Session 2 - Topic Hints": "Narrow AI, General AI, Super AI — real examples of each, current state of the technology, which ones exist today",
+          "Special Instructions for AI": "Use relatable Kenyan examples where possible. Students are tech-curious but not yet technical."
+        }
+      }
+    ],
+    "SP Node 5b": [
+      {
+        "json": {
           "{{unit_title}}": "Understand Artificial Intelligence Concepts",
           "{{unit_code}}": "ICT/OS/CS/CR/08/6/A",
           "{{trainer_name}}": "Ben Mugo",
           "{{admission_no}}": "2025cs162588",
           "{{institution}}": "KINAP",
           "{{level}}": "6",
-          "{{date_prepared}}": "19 Apr 2026",
-          "{{num_learners}}": "20",
           "{{class_name}}": "CSMT",
-          "{{skill_task}}": "Apply AI concepts to solve real-world problems",
+          "{{num_learners}}": "20",
           "{{week_no}}": "6",
-          "{{benchmarks}}": "Define Artificial Intelligence and differentiate it from human intelligence.\nIdentify and categorise the different types of Artificial Intelligence.\nEvaluate the current capabilities and limitations of existing AI technologies.\nApply AI concepts to propose solutions for real-world Kenyan problems.",
-          "{{session_1_title}}": "Introduction to Artificial Intelligence",
-          "{{session_1_outcomes}}": "- Define Artificial Intelligence and recall its fundamental principles.\n- Differentiate between Artificial Intelligence and human intelligence.\n- Identify relatable, real-world examples of Artificial Intelligence applications.\n- Explain the basic historical development of Artificial Intelligence.",
-          "{{session_1_keypoints}}": "## Definition and Core Concepts\n*   **What is AI?** The simulation of human intelligence processes by machines, especially computer systems.\n*   **Key Processes:** Learning, problem-solving, perception, language understanding.\n\n## AI vs. Human Intelligence\n*   **Human Intelligence:** Involves consciousness, emotions, creativity, intuition, and complex reasoning.\n*   **AI Intelligence:** Primarily based on algorithms, data processing, pattern recognition, and logical decision-making.\n\n## Historical Overview\n*   **Early Concepts:** From ancient myths of automata to early computational theories.\n*   **Key Milestones:** Dartmouth Workshop (1956), expert systems, machine learning revolution.\n\n## Relatable AI Examples\n*   **Personal Assistants:** Siri, Google Assistant (understanding voice commands, providing information).\n*   **Navigation Apps:** Google Maps, Waze (optimising routes, predicting traffic).\n*   **Recommendation Systems:** Netflix, YouTube (suggesting content based on user behaviour).\n*   **Online Search:** Google Search (understanding queries, ranking results).",
-          "{{session_1_activities}}": "Through Brainstorming, trainees will generate initial ideas about what Artificial Intelligence is and where they encounter it in their daily lives.\nThrough Think-Pair-Share, trainees will discuss and compare definitions of AI and its differences from human intelligence.\nThrough Group Discussion, trainees will explore and share real-world examples of AI applications they have personally experienced.",
-          "{{session_1_references}}": "Russell, S. J., & Norvig, P. (2020). *Artificial Intelligence: A Modern Approach* (4th ed.). Pearson.\nGoodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.\nKaplan, J. (2016). *Artificial Intelligence: What Everyone Needs to Know*. Oxford University Press.",
-          "{{session_1_resources}}": "Whiteboard or projector for definitions and discussions.\nImages illustrating AI applications (e.g., smart assistants, autonomous vehicles).\nShort video clips showcasing AI in action (e.g., demonstration of a recommendation system).\nHandout with key definitions and historical milestones.",
-          "{{session_1_assessment}}": "Knowledge: Short quiz on AI definitions and examples.\nSkill: Trainees will verbally explain one AI application and its function.\nAttitudes: Trainees will express curiosity and ask clarifying questions about AI concepts.",
-          "{{session_2_title}}": "Types of Artificial Intelligence",
-          "{{session_2_outcomes}}": "- Categorise Artificial Intelligence into Narrow, General, and Super AI.\n- Provide real-world examples for each category of AI.\n- Assess the current prevalence of each AI type in today's technology.\n- Predict potential future developments for General and Super AI.",
-          "{{session_2_keypoints}}": "## Types of Artificial Intelligence\n*   **Narrow AI (Weak AI):** Designed and trained for a specific task. Most AI applications today fall into this category.\n    *   Examples: Voice assistants (Siri, Alexa), image recognition software, recommendation engines, self-driving car systems (for specific driving tasks).\n*   **General AI (Strong AI):** AI with human-level cognitive abilities. Can understand, learn, and apply knowledge across a wide range of tasks, similar to a human.\n    *   Current Status: Largely theoretical; no true General AI exists yet.\n*   **Super AI:** AI that surpasses human intelligence and cognitive abilities in virtually all aspects, including creativity, general wisdom, and problem-solving.\n    *   Current Status: Hypothetical and a subject of much speculation and debate.\n\n## Current State and Future Outlook\n*   **Dominance of Narrow AI:** Emphasise that current advancements are primarily in specialized AI.\n*   **Challenges for General AI:** Discuss the complexities of achieving true general intelligence.\n*   **Ethical Considerations of Super AI:** Briefly touch upon potential implications.",
-          "{{session_2_activities}}": "Through Jigsaw, trainees will form expert groups to research and understand one type of AI (Narrow, General, or Super) and its characteristics.\nThrough Class Presentation, expert groups will then present their findings to the rest of the class, explaining their assigned AI type and providing examples.\nThrough Problem-Based Learning, trainees will be presented with a hypothetical scenario in Kenya and asked to identify which type of AI could be used to solve it.",
-          "{{session_2_references}}": "Goertzel, B. (2014). *Artificial General Intelligence: The Quest for a General Computable Intellect*. Springer.\nBostrom, N. (2014). *Superintelligence: Paths, Dangers, Strategies*. Oxford University Press.\nNg, A. (2019). *AI Transformation Playbook*. DeepLearning.AI.",
-          "{{session_2_resources}}": "Diagrams illustrating the differences between Narrow, General, and Super AI.\nCase studies of current Narrow AI applications in various industries.\nArticles or short videos discussing the theoretical concepts of General and Super AI.\nScenario cards for the Problem-Based Learning activity, with Kenyan contexts.",
-          "{{session_2_assessment}}": "Knowledge: Trainees will correctly identify the type of AI given a specific example.\nSkill: Trainees will verbally explain the key differences between Narrow and General AI.\nAttitudes: Trainees will demonstrate an understanding of the current limitations of AI and express informed opinions on future AI development.",
-          "_template_doc_id": "https://docs.google.com/document/d/1tFopAJ-OmN0ai-NtQX4waS7cNXYnZWXG/edit?usp=sharing&ouid=102155137259718206787&rtpof=true&sd=true",
+          "{{session_date}}": "2026-04-20",
+          "{{session_time}}": "9:00 AM - 12:00 PM",
+          "{{session_title}}": "Introduction to Artificial Intelligence",
+          "{{learning_outcomes}}": "- Define Artificial Intelligence and its core principles.\n- Differentiate between Artificial Intelligence and human intelligence.\n- Generate examples of AI applications in everyday Kenyan life.\n- Compare and contrast the capabilities of AI and human cognition.",
+          "{{references}}": "Russell, S. J., & Norvig, P. (2010). *Artificial Intelligence: A Modern Approach* (3rd ed.). Prentice Hall.\nGoodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.\nKaplan, J. (2015). *Artificial Intelligence: What Everyone Needs to Know*. Oxford University Press.",
+          "{{learning_aids}}": "Whiteboard or projector, Markers or pens, Internet-connected laptop, Presentation slides (defining AI, history, examples), Handout with key AI terms.",
+          "{{safety_requirements}}": "Ensure electrical equipment is in good working order and used safely.\nMaintain clear walkways to prevent trips and falls.",
+          "{{intro_activity}}": "Trainer greets trainees, takes attendance, and recaps the previous session's topic. Trainer then bridges to the current session by asking: 'Have you ever wondered how your phone seems to know what you're looking for before you type it, or how music apps suggest songs you might like? Today, we're diving into the technology behind these amazing feats: Artificial Intelligence.' Board work: Write Unit Title, Unit Code, Class, Week, Session Title.",
+          "{{step1_trainer}}": "Trainer initiates a 'Brainstorming' activity to gauge prior knowledge. Trainer asks trainees to write down any words or phrases they associate with 'Artificial Intelligence' on sticky notes. Trainer then collects these and clusters similar ideas on the board, highlighting common themes and misconceptions.",
+          "{{step1_trainee}}": "Trainees participate in the 'Brainstorming' activity by writing down their associations with AI on sticky notes and placing them on the board as directed by the trainer. Trainees observe the clustering of ideas.",
+          "{{step1_time}}": "40 mins",
+          "{{step2a_trainer}}": "Trainer uses 'Think-Pair-Share' to explain the definition and fundamental principles of AI. Trainer presents a clear definition of AI, followed by a brief, engaging overview of its history, using relatable Kenyan examples (e.g., early mobile phone features, simple automation in factories). Trainer then poses a question: 'Based on this, what is the core idea behind AI?' Trainees think individually, discuss with a partner, and then share their consolidated understanding with the class.",
+          "{{step2a_trainee}}": "Trainees individually consider the definition and history of AI. Trainees then discuss the core idea of AI with a partner, followed by sharing their collective understanding with the larger group during the 'Think-Pair-Share' session.",
+          "{{step2a_time}}": "40 mins",
+          "{{step2b_trainer}}": "Trainer facilitates a 'Group Discussion' focusing on differentiating AI from human intelligence. Trainer poses questions such as: 'Can AI feel emotions like humans do?', 'How does AI learn compared to a human?', 'What are some tasks AI performs better than humans, and vice-versa?'. Trainer guides the discussion, encouraging trainees to support their points with examples, ensuring a balanced perspective.",
+          "{{step2b_trainee}}": "Trainees engage in a 'Group Discussion', actively participating by sharing their thoughts and reasoning on the differences between AI and human intelligence. They will listen to and build upon the contributions of their peers, citing examples to support their arguments.",
+          "{{step2b_time}}": "40 mins",
+          "{{step3_trainer}}": "Trainer uses a 'Case Study' approach to explore real-world AI applications. Trainer presents short, visual case studies of AI in action in Kenya (e.g., M-Pesa algorithms, traffic management systems in Nairobi, chatbots for customer service in local banks, smart farming applications). For each case, the trainer asks trainees to identify the AI element and explain its function and benefit.",
+          "{{step3_trainee}}": "Trainees analyse the presented 'Case Studies' of AI applications in Kenya. They will actively identify the role of AI in each scenario, discuss its function, and explain its benefits in their own words, demonstrating their understanding of AI in practical contexts.",
+          "{{step3_time}}": "40 mins",
+          "{{session_review}}": "Trainer leads a summary by asking trainees to state one key takeaway from the session. Trainees volunteer to share definitions of AI, highlight differences between AI and human intelligence, and provide examples of AI applications. Trainer concludes by reinforcing the main learning outcomes and answering any final questions.",
+          "{{follow_up}}": "Assign trainees to research and bring to the next session one novel AI application they encounter in their daily lives in Kenya, preparing to explain what it is and how it uses AI.",
+          "{{total_time}}": "180 mins",
+          "_template_doc_id": "15mPmujhyuAh5eRdkd9CuaQSfOZ9gQM4_EV9hBzR8Y_U",
           "_output_folder_id": "Paste the Drive folder ID where generated docs should be saved",
           "_class_name": "CSMT",
           "_week_no": "6",
           "_unit_title": "Understand Artificial Intelligence Concepts",
-          "_week_date": "2026-04-20"
+          "_session_date": "2026-04-20",
+          "_session_title": "Introduction to Artificial Intelligence"
         },
         "pairedItem": {
           "item": 0
-        }
-      }
-    ],
-    "1. Form Response Trigger": [
-      {
-        "json": {
-          "row_number": 5,
-          "change_type": "updated",
-          "Timestamp": 46131.608089236106,
-          "Unit Title": "Understand Artificial Intelligence Concepts",
-          "Unit Code ": "ICT/OS/CS/CR/08/6/A",
-          "Class Name": "CSMT",
-          "Class Name 2": "CSMT",
-          "Number of Learners": 26,
-          "Week Number": 3,
-          "Date of Week (Monday) ": 46131,
-          "Skill or Job Task": "Apply AI concepts to solve real-world problems",
-          "Raw Learning Objectives": "Students should know what AI is",
-          "Session 1 Title ": "Introduction to Artificial Intelligence",
-          "Session 1 — Topic Hints": "Definition of AI, brief history, examples like Siri",
-          "Session 2 Title ": "",
-          "Session 2 — Topic Hints ": "",
-          "Special Instructions for AI": "Use relatable Japan examples"
         }
       }
     ]
@@ -609,17 +1052,7 @@
       "main": [
         [
           {
-            "node": "2a. Read Profile Tab",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "2b. Read Blooms Tab",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "2c. Read Strategies Tab",
+            "node": "Switch (Document Type)",
             "type": "main",
             "index": 0
           }
@@ -655,6 +1088,11 @@
             "node": "5. Parse Gemini Response",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "SP Node 5b",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -685,6 +1123,153 @@
           }
         ]
       ]
+    },
+    "Switch (Document Type)": {
+      "main": [
+        [
+          {
+            "node": "2a. Read Profile Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2b. Read Blooms Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2c. Read Strategies Tab",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "2a-SP. Read Profile Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2b-SP. Read Blooms Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2c-SP. Read Strategies Tab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2a-SP. Read Profile Tab": {
+      "main": [
+        [
+          {
+            "node": "Merge-SP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2b-SP. Read Blooms Tab": {
+      "main": [
+        [
+          {
+            "node": "Merge-SP",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "2c-SP. Read Strategies Tab": {
+      "main": [
+        [
+          {
+            "node": "Merge-SP",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge-SP": {
+      "main": [
+        [
+          {
+            "node": "SP Node 3 — Code node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SP Node 3 — Code node": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SP Node 6b": {
+      "main": [
+        [
+          {
+            "node": "SP Node 7a",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SP Node 5b": {
+      "main": [
+        [
+          {
+            "node": "SP Node 6b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SP Node 7a": {
+      "main": [
+        [
+          {
+            "node": "Node 7b — HTTP Request node1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 7b — HTTP Request node1": {
+      "main": [
+        [
+          {
+            "node": "8a. Log to Master Sheet1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "8b. Create Calendar Event1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8b. Create Calendar Event1": {
+      "main": [
+        []
+      ]
     }
   },
   "active": true,
@@ -692,7 +1277,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "7c68d86f-d4ae-4f61-8807-856b3b5feaf9",
+  "versionId": "5004e3eb-d4ce-48ee-a515-723040060bee",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "105873a0e32e3c0a6d5d9f87c5dde92f4ed2f266a2db781ef0a25d96dc99deb8"
