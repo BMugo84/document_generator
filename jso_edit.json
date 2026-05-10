@@ -1,216 +1,34 @@
 [
   {
-    "docId": "1kKgulb6NlnZhlNG-_mY2huajyHohmwCOC0xImDxxcyo",
-    "body": {
-      "requests": [
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{institution}}",
-              "matchCase": true
-            },
-            "replaceText": "KINAP"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{trainer_name}}",
-              "matchCase": true
-            },
-            "replaceText": "Ben Mugo"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{unit_title}}",
-              "matchCase": true
-            },
-            "replaceText": "Understand Artificial Intelligence Concepts"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{unit_code}}",
-              "matchCase": true
-            },
-            "replaceText": "ICT/OS/CS/CR/08/6/A"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{session_title}}",
-              "matchCase": true
-            },
-            "replaceText": "Introduction to Artificial Intelligence"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{session_date}}",
-              "matchCase": true
-            },
-            "replaceText": "2026-04-20"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{class_name}}",
-              "matchCase": true
-            },
-            "replaceText": "CSMT"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{level}}",
-              "matchCase": true
-            },
-            "replaceText": "6"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{num_learners}}",
-              "matchCase": true
-            },
-            "replaceText": "20"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{tn_learning_outcomes}}",
-              "matchCase": true
-            },
-            "replaceText": "- Assist trainees to define AI and recall its fundamental principles\n- Enable trainees to distinguish between AI and human intelligence through analysis\n- Guide trainees to identify and classify real-world AI applications\n- Facilitate trainees in proposing a simple AI-based solution for a local problem"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{prerequisites}}",
-              "matchCase": true
-            },
-            "replaceText": "1. Basic understanding of what a computer is and how it processes data\n2. Familiarity with common smartphone applications (e.g., maps, voice assistants)\n3. No prior programming or advanced mathematics required\n4. Ability to work in groups and share ideas verbally"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{content_notes}}",
-              "matchCase": true
-            },
-            "replaceText": "ARTIFICIAL INTELLIGENCE (AI) is a branch of computer science that aims to create systems capable of performing tasks that typically require human intelligence. These tasks include learning, reasoning, problem-solving, perception, and language understanding. The term was coined at the Dartmouth Conference in 1956. Early AI focused on symbolic reasoning and rule-based systems (e.g., ELIZA). After periods of reduced funding (AI winters), AI re-emerged with machine learning, where algorithms learn patterns from data. Key milestones include Deep Blue (1997), Siri (2011), AlphaGo (2016). AI can be narrow (specific tasks) or general (human-level). Current AI is all narrow. HUMAN INTELLIGENCE involves consciousness, emotions, creativity, and common sense, which AI lacks. AI operates based on data and algorithms; it does not understand context like humans. REAL-WORLD EXAMPLES: Siri uses natural language processing; Google Maps uses predictive algorithms for traffic; M-Pesa fraud detection uses anomaly detection; Safaricom's chatbot Zuri uses natural language understanding. Each application relies on data input, algorithmic processing, and continuous improvement via feedback. Key concepts: training data, model, prediction, accuracy. Trainer should emphasise that AI is a tool, not a replacement for human judgement."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{worked_examples}}",
-              "matchCase": true
-            },
-            "replaceText": "1. CONFIGURATION WALKTHROUGH: Trainer demonstrates how to configure a simple rule-based chatbot using a free online platform (e.g., Pandorabots). Steps: (a) Create account, (b) Create new bot, (c) Add a category with pattern hello and response Hello! How can I help you today?, (d) Add a second category pattern * my name is * with response Nice to meet you! What is your name? (e) Test the bot in the chat window. Trainer explains that each pattern is a rule, showing how early AI works. (Note: Since no live internet, trainer can show screenshots or pre-recorded video.)\n\n2. TROUBLESHOOTING SCENARIO: A voice assistant (like Siri) misunderstands a Kenyan accent. Scenario: User says Niko ndani ya traffic (I am inside traffic). Assistant responds with I could not find traffic; do you mean traffic? Trainer explains the cause: the AI was trained on mostly American or British English speech data, not local accents. Solution: retrain the model with diverse speech samples including Kenyan English and Swahili. This illustrates data bias and the need for representative training data.\n\n3. DIAGRAM EXPLANATION: Trainer draws a timeline of AI history on the board. (a) 1956: Dartmouth Conference (birth of AI). (b) 1966: ELIZA chatbot. (c) 1980s: Expert systems. (d) 1997: Deep Blue beats Kasparov. (e) 2011: Siri launches. (f) 2016: AlphaGo beats Lee Sedol. Trainer explains each milestone, noting the pattern of optimism, disappointment, and revival. Emphasise that current AI is narrow and data-driven."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{misconceptions}}",
-              "matchCase": true
-            },
-            "replaceText": "1. Misconception: AI is the same as robots. Correction: AI is software; robots can be controlled by AI but many robots are non-AI. Trainer shows examples like a washing machine (non-AI) vs a self-driving car (AI).\n2. Misconception: AI has consciousness and feelings. Correction: AI simulates responses based on patterns; it has no subjective experience. Trainer uses the chatbot example to demonstrate scripted responses.\n3. Misconception: AI will replace all jobs. Correction: AI changes jobs; it automates specific tasks but creates new roles. Trainer cites M-Pesa fraud detection where AI assists human analysts rather than replacing them.\n4. Misconception: AI can learn anything instantly. Correction: AI requires large amounts of clean data and training time. Trainer contrasts with human ability to learn from few examples.\n5. Misconception: AI is infallible. Correction: AI makes errors, often due to biased data or limited context. Trainer uses the troubleshooting scenario of misheard accents."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{tn_questions_low}}",
-              "matchCase": true
-            },
-            "replaceText": "1. What does the acronym AI stand for?\n2. Name one event that is considered the beginning of AI as a field.\n3. List two examples of AI applications mentioned in class."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{tn_questions_mid}}",
-              "matchCase": true
-            },
-            "replaceText": "1. How does the learning process of an AI differ from how humans learn to recognise a friend's face?\n2. A chatbot cannot understand sarcasm. Why is that? Use the concept of training data and context.\n3. Compare how Google Maps predicts traffic with how a human traffic officer would estimate congestion. What are the strengths and weaknesses of each?"
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{tn_questions_high}}",
-              "matchCase": true
-            },
-            "replaceText": "1. Evaluate the potential ethical issues of deploying an AI system that scans job applications for hiring. What criteria would you use to judge its fairness?\n2. Propose a simple AI system that could help farmers in rural Kenya predict rainfall patterns. What data would you need? How would you test its accuracy?\n3. Given that AI lacks true understanding, should we trust AI to make medical diagnoses? Justify your answer."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{practical_trainer_guide}}",
-              "matchCase": true
-            },
-            "replaceText": "1. SETUP: Ensure trainees have access to a device with internet or a pre-installed demo (offline chatbot). Have handouts ready with step-by-step instructions.\n2. DEMONSTRATE: Open the rule-based chatbot interface (e.g., Pandorabots or a pre-made HTML page). Show how to send a message Hello and receive a response. Then send I am feeling sad and point out that the chatbot might not recognise it (lack of emotion understanding).\n3. EXPLAIN: Relate the chatbot responses to AI concepts: pattern matching (remembering), no real comprehension (understanding).\n4. MONITOR: Trainees access the same demo on their own devices. They try different inputs: greetings, questions, nonsense. Trainer walks around, asking guiding questions like Why do you think it answered that way?\n5. DEBRIEF: Trainer brings class together, asks a few trainees to share surprising reactions. Summarise how even simple AI relies on pre-programmed rules or learned patterns.\n6. NOTE: If devices are unavailable, trainer can call volunteers to the front to type and project the screen."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{practical_student_guide}}",
-              "matchCase": true
-            },
-            "replaceText": "1. Open the chatbot demo link provided by the trainer (or open the file on your computer).\n2. Type a greeting such as Hello and press enter. Write down the chatbot's response.\n3. Type a question: What is the weather today? and observe the response.\n4. Type a phrase that includes the word name, such as My name is James. Note how the chatbot responds.\n5. Now type a sentence that you think might confuse the chatbot, for example, I am not happy. Record the response.\n6. Think about why the chatbot cannot understand emotions. Write one sentence explaining.\n7. (If time) Try typing Swahili phrases like Habari or Nimefurahi. Does the chatbot understand? Why or why not?\n8. Be ready to share your findings with the class."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{assessment_knowledge}}",
-              "matchCase": true
-            },
-            "replaceText": "At the end of the session, use an exit ticket with one question: In your own words, what is the fundamental difference between AI and human intelligence? Collect tickets and review for understanding."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{assessment_skill}}",
-              "matchCase": true
-            },
-            "replaceText": "Observe trainees during the practical demonstration. Each trainee must successfully send at least three different types of messages to the chatbot and explain one response. Trainer uses a checklist: ability to interact with the interface, ability to recognise when the chatbot fails, ability to articulate a reason for the failure."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{assessment_attitude}}",
-              "matchCase": true
-            },
-            "replaceText": "During group discussions and the Gallery Walk, note whether trainees show respect for diverse opinions, especially when debating AI's capabilities. Look for evidence of curiosity, critical thinking, and willingness to consider ethical perspectives. Trainer may ask: How would you feel if an AI made a decision that affected your life? and observe openness to discussion."
-          }
-        },
-        {
-          "replaceAllText": {
-            "containsText": {
-              "text": "{{tn_references}}",
-              "matchCase": true
-            },
-            "replaceText": "- Russell, S., & Norvig, P. (2020). Artificial Intelligence: A Modern Approach (4th ed.). Pearson.\n- Floridi, L., & Cowls, J. (2019). A unified framework of five principles for AI in society. Harvard Data Science Review, 1(1).\n- Ng, A. (2018). Machine Learning Yearning. Self-published. (Free online draft)\n- Mugambi, K. (2020). Artificial Intelligence in Kenya: Opportunities and Challenges. African Journal of Computing & ICT, 13(3).\nSuggested further reading for students: What is Artificial Intelligence? (short online article by Stanford AI Lab) and AI for Everyone (Coursera course by Andrew Ng)."
-          }
-        }
-      ]
-    }
+    "{{institution}}": "KINAP",
+    "{{trainer_name}}": "Ben Mugo",
+    "{{unit_title}}": "Understand Artificial Intelligence Concepts",
+    "{{unit_code}}": "ICT/OS/CS/CR/08/6/A",
+    "{{session_title}}": "Introduction to Artificial Intelligence",
+    "{{session_date}}": "2026-04-20",
+    "{{class_name}}": "CSMT",
+    "{{level}}": "6",
+    "{{num_learners}}": "20",
+    "{{tn_learning_outcomes}}": "1. Define Artificial Intelligence and recall its fundamental principles. 2. Differentiate between AI and human intelligence using specific criteria. 3. Identify real-world examples of AI, including Kenyan applications. 4. Outline the key historical milestones in the development of AI.",
+    "{{prerequisites}}": "1. Basic understanding of computers and mobile devices. 2. Familiarity with everyday applications such as search engines and navigation tools. 3. No prior programming or technical knowledge required.",
+    "{{content_notes}}": "INTRODUCTION TO ARTIFICIAL INTELLIGENCE\n\nDEFINITION OF AI. Artificial Intelligence refers to the simulation of human intelligence by machines, especially computer systems. These systems are designed to perform tasks that typically require human cognitive functions such as learning, reasoning, problem-solving, perception, and language understanding. AI can be categorized into narrow AI which is designed for a specific task, and general AI which would have the ability to perform any intellectual task a human can. Currently, most AI systems are narrow AI.\n\nBRIEF HISTORY OF AI. The concept of AI dates back to ancient myths, but the formal field began in the 1950s. In 1950, Alan Turing published Computing Machinery and Intelligence proposing the Turing Test. In 1956, the Dartmouth Conference officially coined the term Artificial Intelligence. Early successes included problem-solving programs and checkers. The 1970s and 1980s saw periods of reduced funding known as AI winters, followed by resurgence with expert systems in the 1980s. The 1990s brought statistical learning and machine learning. Recent advances include deep learning, natural language processing, and large language models. In Kenya, AI adoption has grown in sectors like agriculture (crop disease detection), finance (M-Pesa fraud detection), and healthcare (telemedicine diagnostics).\n\nDIFFERENCES BETWEEN AI AND HUMAN INTELLIGENCE. Human intelligence is biological, emotional, and conscious. Humans learn flexibly from small amounts of data, can generalize across contexts, and possess self-awareness. AI systems rely on data and algorithms, require large datasets, lack true understanding, and operate within defined boundaries. AI processes information much faster than humans but cannot replicate common sense or genuine empathy. For example, a human can recognize a friend after not seeing them for years; an AI facial recognition system requires consistent training data and can be fooled by minor changes.\n\nREAL-WORLD EXAMPLES. Common examples include virtual assistants like Siri and Google Assistant, which use natural language processing to understand and respond to voice commands. Google Maps uses AI to predict traffic patterns and suggest optimal routes by analyzing historical and real-time data from users. In Kenya, Safaricom uses chatbots for customer service; Jumo uses AI for credit scoring; and FarmDrive uses AI to assess loan risk for smallholder farmers. Other examples include recommendation systems on Netflix and YouTube, spam filters in email, and self-driving cars in pilot stages globally.",
+    "{{worked_examples}}": "CONFIGURATION WALKTHROUGH: SETTING UP GOOGLE ASSISTANT ON AN ANDROID PHONE\n1. Open the Google app on the phone.\n2. Tap the profile icon at the top right and select Settings.\n3. Scroll to Google Assistant and tap it.\n4. Toggle Hey Google to on. Follow the voice training prompts.\n5. Say Hey Google, what is the weather today? to test.\n6. Explain that the AI processes the voice input using speech recognition, interprets the intent with natural language understanding, and fetches data from weather services.\n\nTROUBLESHOOTING SCENARIO: GOOGLE MAPS NOT SHOWING REAL-TIME TRAFFIC\nSymptoms: User notices no traffic data on the map despite heavy congestion. Diagnosis: Check if Location Services are enabled. Explain that Google Maps relies on GPS and aggregated anonymous data from other users. If location is off, AI cannot gather or display traffic data. Fix: Ensure location is turned on and set to High Accuracy mode. Also check that Google Maps has permission to access location in phone settings. After enabling, the AI should begin showing traffic overlays within a few minutes.\n\nDIAGRAM EXPLANATION: AI, MACHINE LEARNING, AND DEEP LEARNING RELATIONSHIP\nDraw three concentric circles. The outermost circle is labeled Artificial Intelligence, representing the broadest field. Inside it is a smaller circle labeled Machine Learning, a subset of AI where systems learn from data. The innermost circle is Deep Learning, a subset of machine learning using neural networks with multiple layers. Use arrows to show that deep learning is a specialized technique within machine learning. Point out that not every AI system uses machine learning; some are rule-based expert systems. For a Kenyan example, a rule-based system might be a simple M-Pesa fraud filter that flags transactions above a threshold, while a machine learning system learns from transaction patterns to detect fraud more accurately.",
+    "{{misconceptions}}": "1. MISCONCEPTION: AI is the same as robots. Explanation: AI is software that enables machines to perform intelligent tasks; robots are physical machines that may or may not use AI. Address by clarifying that Siri is AI, not a robot. 2. MISCONCEPTION: AI will replace all human jobs. Explanation: AI automates certain tasks but also creates new jobs and augments human capabilities. Address by discussing jobs that require creativity, empathy, and complex decision-making. 3. MISCONCEPTION: AI is perfect and never makes mistakes. Explanation: AI systems have biases and errors based on training data. Address by giving example of facial recognition errors with darker skin tones. 4. MISCONCEPTION: AI has human-like consciousness. Explanation: AI lacks self-awareness, emotions, and consciousness. Address by contrasting how AI responds to commands without understanding. 5. MISCONCEPTION: AI only exists in science fiction. Explanation: AI is already in everyday tools like search engines, email spam filters, and navigation apps. Address by asking students to list AI they used today.",
+    "{{tn_questions_low}}": "1. Remember: Define Artificial Intelligence in your own words. 2. Remember: Name two historical milestones in the development of AI. 3. Understand: Explain the difference between narrow AI and general AI.",
+    "{{tn_questions_mid}}": "1. Apply: Describe how Google Maps uses AI to suggest the fastest route. 2. Analyse: Compare the process of learning for a human versus a machine learning model. 3. Analyse: Identify an AI application in Kenya and explain which type of intelligence (human-like or not) it mimics.",
+    "{{tn_questions_high}}": "1. Evaluate: Assess the potential benefits and risks of using AI in Kenyan agriculture. 2. Create: Propose a simple AI-driven solution to reduce traffic congestion in Nairobi. Outline the data needed and how the system would work. 3. Evaluate: Discuss the ethical considerations of using AI in hiring decisions. How would you ensure fairness?",
+    "{{practical_trainer_guide}}": "1. Begin by asking students to share examples of AI they have encountered in daily life. Write them on the board. 2. Distribute a worksheet with a timeline of AI history and ask students to fill in missing events from a word bank. Guide them through the answers. 3. Show a short video (3-5 minutes) demonstrating a virtual assistant. 4. Lead a discussion on the differences between AI and human intelligence using a table drawn on the board. 5. Conduct the configuration walkthrough: demonstrate setting up Google Assistant on your own phone step by step. Have students follow on their phones if possible. 6. Present the troubleshooting scenario and ask students to suggest possible causes and fixes. 7. Draw the AI-ML-DL diagram on the board and explain each layer. 8. Ask students to form groups and identify three AI applications in Kenya from a provided list, then present one to the class.",
+    "{{practical_student_guide}}": "1. Open your smartphone and list all applications you think use AI. Write them down. 2. Using the provided worksheet, fill in the timeline with the correct events from the word bank. 3. On your phone, if available, enable Google Assistant or Siri and ask it three questions (weather, a joke, a fact). Record the responses. 4. In pairs, discuss one way an AI application could help solve a problem in your community. Write a short paragraph. 5. Look at the diagram of AI, ML, and DL drawn by your trainer. Copy it into your notebook and label each circle. 6. Choose one Kenyan AI example from the list provided (e.g., M-Pesa fraud detection) and explain how it uses data to make decisions. 7. Prepare a brief presentation (2 minutes) with your group on your chosen example.",
+    "{{assessment_knowledge}}": "Ask students to write a one-sentence definition of Artificial Intelligence and list two differences between AI and human intelligence.",
+    "{{assessment_skill}}": "Give students a list of five scenarios (e.g., email spam filter, a human taxi driver, a calculator, a chatbot, a weather forecast app). Ask them to identify which are AI and which are not, and justify their choices in writing.",
+    "{{assessment_attitude}}": "Observe whether students actively participate in group discussions, ask thoughtful questions about the impact of AI in Kenya, and demonstrate respect for diverse opinions on technology adoption.",
+    "{{tn_references}}": "1. Russell, S., & Norvig, P. (2021). Artificial Intelligence: A Modern Approach (4th ed.). Pearson. 2. Boden, M. A. (2016). AI: Its Nature and Future. Oxford University Press. 3. Mwirigi, F. (2020). The state of AI adoption in Kenya. Kenya ICT Journal, 7(2), 45-52. Further reading: 1. Ng, A. (2018). AI Transformation Playbook. Landing AI. 2. Tegmark, M. (2017). Life 3.0: Being Human in the Age of Artificial Intelligence. Knopf.",
+    "_tn_template_doc_id": "11wZm47ucQeuQoHsSGAGqpIzdgFngRQysuUGVkr8Ktgk",
+    "_output_folder_id": "1N-OJ5I2SoI_3Y0JM7fB4aR8sdF6c2xRx",
+    "_class_name": "CSMT",
+    "_week_no": "6",
+    "_unit_title": "Understand Artificial Intelligence Concepts",
+    "_session_date": "2026-04-20",
+    "_session_title": "Introduction to Artificial Intelligence"
   }
 ]

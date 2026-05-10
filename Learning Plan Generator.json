@@ -173,7 +173,7 @@
     },
     {
       "parameters": {
-        "operation": "appendOrUpdate",
+        "operation": "append",
         "documentId": {
           "__rl": true,
           "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
@@ -386,14 +386,14 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=={{ $if($('3. Build Gemini Prompt').isExecuted, $('3. Build Gemini Prompt').first().json.prompt, $('SP Node 3 — Code node').first().json.prompt) }}",
+        "text": "=={{ $json.prompt_sp }}",
         "batching": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
         -160,
-        576
+        512
       ],
       "id": "4147dc22-0f32-45e1-9bca-5c59b29e8939",
       "name": "Basic LLM Chain"
@@ -517,7 +517,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ============================================================\n// NODE 3b — BUILD SESSION PLAN GEMINI PROMPT\n// ============================================================\n\nconst form = $('1. Form Response Trigger').first().json;\n\n// Same helper functions from LP\nconst f = (key) => {\n  const match = Object.keys(form).find(k => k.trim() === key.trim());\n  return match ? (form[match] || '') : '';\n};\n\nconst excelDateToString = (serial) => {\n  if (!serial || isNaN(serial)) return String(serial || '');\n  const date = new Date((serial - 25569) * 86400 * 1000);\n  return date.toISOString().split('T')[0];\n};\n\n// Pull profile\nconst profileRows = $('2a-SP. Read Profile Tab').all().map(i => i.json);\nconst profile = {};\nprofileRows.forEach(row => {\n  if (row['key'] && row['value']) {\n    profile[row['key'].trim()] = String(row['value']).trim();\n  }\n});\n\n// Pull Bloom's\nconst bloomsRows = $('2b-SP. Read Blooms Tab').all().map(i => i.json);\nconst bloomsText = bloomsRows.map(r =>\n  `${r['level']}: ${r['all_verbs'] || ''}`\n).join('\\n');\n\n// Pull strategies\nconst stratRows = $('2c-SP. Read Strategies Tab').all().map(i => i.json);\nconst strategiesText = stratRows.map(r =>\n  `- ${r['strategy']}: ${r['description']} (Best for: ${r['best_for']})`\n).join('\\n');\n\n// Form fields\nconst unitTitle       = f('Unit Title');\nconst unitCode        = f('Unit Code');\nconst className       = f('Class Name');\nconst numLearners     = String(f('Number of Learners'));\nconst weekNo          = String(f('Week Number'));\nconst sessionDate     = excelDateToString(f('Session Date'));\nconst sessionTime     = f('Session Time');\nconst sessionTitle    = f('Session Title');\nconst sessionHints    = f('Session Topic Hints');\nconst lpContext       = f('LP Outcomes and Key Points');\nconst llnReq          = f('LLN Requirements') || 'N/A';\nconst specialInstr    = f('Special Instructions for AI') || 'None';\n\nconst prompt = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write in formal, assessor-ready language aligned to KSTVET standards.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\nDo NOT use markdown formatting in any field values. No ##, no **, no *, no -- bullets.\nFor section headings use CAPS. For lists use numbers (1. 2. 3.) or letters (a. b. c.).\nWrite in flowing, formal prose where possible. This content goes into Google Docs directly.\n\n=== BLOOM'S TAXONOMY VERBS ===\n${bloomsText}\n\nFor Level 6, PREFER verbs from levels 3-6 (Applying, Analysing, Evaluating, Creating).\n\n=== ACTIVE LEARNING STRATEGIES ===\n${strategiesText}\n\nAlways name the specific strategy used. Each step must use a named strategy.\n\n=== LEARNING PLAN CONTEXT (this SP must align with this LP) ===\n${lpContext}\n\n=== TEACHER INPUT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLearners: ${numLearners}\nWeek: ${weekNo}\nSession Title: ${sessionTitle}\nSession Topic Hints: ${sessionHints}\nLLN Requirements: ${llnReq}\nSpecial Instructions: ${specialInstr}\n\n=== SESSION STRUCTURE ===\nGenerate a 3-hour session (180 minutes total) with this structure:\n- Introduction: 10 mins\n- Step 1: 40 mins\n- Step 2a: 40 mins\n- Step 2b: 40 mins\n- Step 3: 40 mins\n- Session Review: 10 mins\n\n=== TEACHER'S NOTES CONTEXT ===\nAlso generate detailed teacher's notes for this session.\nThe trainer teaches Level 6 practical units (Networking, Mathematics).\nSessions are 3 hours long — content notes must be detailed enough to \nguide the trainer through the full session without referring to other materials.\nWorked examples must include at least one configuration walkthrough, \none troubleshooting scenario, and one diagram explanation.\nPractical guides must be written for both trainer and student separately.\nDo NOT use markdown. Use plain numbered lists and CAPS for headings.\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON. All values must be strings.\n\n{\n  \"learning_outcomes\": \"3-4 outcomes starting with Bloom's verbs, each on new line starting with dash\",\n  \"references\": \"2-3 APA formatted references relevant to this topic\",\n  \"learning_aids\": \"3-5 physical or digital learning aids\",\n  \"safety_requirements\": \"relevant safety requirements for this session\",\n  \"intro_activity\": \"What trainer does in introduction — board work, attendance, recap, bridge-in\",\n  \"step1_trainer\": \"Trainer activity for Step 1 with named strategy\",\n  \"step1_trainee\": \"Trainee activity for Step 1 with named strategy\",\n  \"step1_time\": \"40 mins\",\n  \"step2a_trainer\": \"Trainer activity for Step 2a with named strategy\",\n  \"step2a_trainee\": \"Trainee activity for Step 2a with named strategy\",\n  \"step2a_time\": \"40 mins\",\n  \"step2b_trainer\": \"Trainer activity for Step 2b with named strategy\",\n  \"step2b_trainee\": \"Trainee activity for Step 2b with named strategy\",\n  \"step2b_time\": \"40 mins\",\n  \"step3_trainer\": \"Trainer activity for Step 3 with named strategy\",\n  \"step3_trainee\": \"Trainee activity for Step 3 with named strategy\",\n  \"step3_time\": \"40 mins\",\n  \"session_review\": \"How trainer and trainees summarise the session\",\n  \"follow_up\": \"Extended activity or homework for trainees\",\n  \"total_time\": \"180 mins\",\n  \"tn_learning_outcomes\": \"3-4 outcomes for Teacher's Notes — same as session outcomes but written as trainer reference statements\",\n  \"prerequisites\": \"What students must already know before this session — list as plain numbered points\",\n  \"content_notes\": \"Detailed subject matter for the trainer — theory, formulas, concepts, procedures, definitions. Written in formal prose. No markdown.\",\n  \"worked_examples\": \"Mix of: 1. Configuration walkthrough (step by step), 2. Troubleshooting scenario (diagnose and fix), 3. Diagram explanation (describe what to draw/show). Each clearly labelled.\",\n  \"misconceptions\": \"3-5 common mistakes students make on this topic and how the trainer should address each one. Numbered list.\",\n  \"tn_questions_low\": \"2-3 questions at Remember and Understand level for class discussion\",\n  \"tn_questions_mid\": \"2-3 questions at Apply and Analyse level for class discussion\",\n  \"tn_questions_high\": \"2-3 questions at Evaluate and Create level for class discussion\",\n  \"practical_trainer_guide\": \"Step by step guide for what the trainer does during the practical — demonstrate, explain, monitor. Numbered steps.\",\n  \"practical_student_guide\": \"Lab sheet style instructions for students to follow during the practical. Numbered steps. Clear and simple language.\",\n  \"assessment_knowledge\": \"One question or method to check knowledge at end of session\",\n  \"assessment_skill\": \"One practical task or demonstration to check skill\",\n  \"assessment_attitude\": \"One observable behaviour or response to check attitude\",\n  \"tn_references\": \"2-3 APA references plus 1-2 suggested further reading resources for students\"\n}\n`;\n\nreturn [{\n  json: {\n    prompt,\n    unit_title: unitTitle,\n    unit_code: unitCode,\n    class_name: className,\n    num_learners: numLearners,\n    week_no: weekNo,\n    session_date: sessionDate,\n    session_time: sessionTime,\n    session_title: sessionTitle,\n    trainer_name: profile['trainer_name'] || '',\n    admission_no: profile['admission_no'] || '',\n    institution: profile['institution'] || '',\n    level: profile['level'] || '6',\n    template_doc_id: profile['session_plan_template_id'] || '',\n    tn_template_doc_id: profile['teachers_notes_template_id'] || '',\n    output_folder_id: profile['output_folder_id'] || '',\n    date_prepared: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })\n  }\n}];"
+        "jsCode": "// ============================================================\n// NODE 3b — BUILD SESSION PLAN GEMINI PROMPT\n// ============================================================\n\nconst form = $('1. Form Response Trigger').first().json;\n\n// Same helper functions from LP\nconst f = (key) => {\n  const match = Object.keys(form).find(k => k.trim() === key.trim());\n  return match ? (form[match] || '') : '';\n};\n\nconst excelDateToString = (serial) => {\n  if (!serial || isNaN(serial)) return String(serial || '');\n  const date = new Date((serial - 25569) * 86400 * 1000);\n  return date.toISOString().split('T')[0];\n};\n\n// Pull profile\nconst profileRows = $('2a-SP. Read Profile Tab').all().map(i => i.json);\nconst profile = {};\nprofileRows.forEach(row => {\n  if (row['key'] && row['value']) {\n    profile[row['key'].trim()] = String(row['value']).trim();\n  }\n});\n\n// Pull Bloom's\nconst bloomsRows = $('2b-SP. Read Blooms Tab').all().map(i => i.json);\nconst bloomsText = bloomsRows.map(r =>\n  `${r['level']}: ${r['all_verbs'] || ''}`\n).join('\\n');\n\n// Pull strategies\nconst stratRows = $('2c-SP. Read Strategies Tab').all().map(i => i.json);\nconst strategiesText = stratRows.map(r =>\n  `- ${r['strategy']}: ${r['description']} (Best for: ${r['best_for']})`\n).join('\\n');\n\n// Form fields\nconst unitTitle       = f('Unit Title');\nconst unitCode        = f('Unit Code');\nconst className       = f('Class Name');\nconst numLearners     = String(f('Number of Learners'));\nconst weekNo          = String(f('Week Number'));\nconst sessionDate     = excelDateToString(f('Session Date'));\nconst sessionTime     = f('Session Time');\nconst sessionTitle    = f('Session Title');\nconst sessionHints    = f('Session Topic Hints');\nconst lpContext       = f('LP Outcomes and Key Points');\nconst llnReq          = f('LLN Requirements') || 'N/A';\nconst specialInstr    = f('Special Instructions for AI') || 'None';\n\n// ============================================================\n// PROMPT 1 — SESSION PLAN ONLY\n// ============================================================\nconst promptSP = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write in formal, assessor-ready language aligned to KSTVET standards.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\nDo NOT use markdown formatting in any field values. No ##, no **, no *, no -- bullets.\nFor section headings use CAPS. For lists use numbers (1. 2. 3.) or letters (a. b. c.).\nWrite in flowing, formal prose where possible. This content goes into Google Docs directly.\n\n=== BLOOM'S TAXONOMY VERBS ===\n${bloomsText}\n\nFor Level 6, PREFER verbs from levels 3-6 (Applying, Analysing, Evaluating, Creating).\n\n=== ACTIVE LEARNING STRATEGIES ===\n${strategiesText}\n\nAlways name the specific strategy used. Each step must use a named strategy.\n\n=== LEARNING PLAN CONTEXT (this SP must align with this LP) ===\n${lpContext}\n\n=== TEACHER INPUT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLearners: ${numLearners}\nWeek: ${weekNo}\nSession Title: ${sessionTitle}\nSession Topic Hints: ${sessionHints}\nLLN Requirements: ${llnReq}\nSpecial Instructions: ${specialInstr}\n\n=== SESSION STRUCTURE ===\nGenerate a 3-hour session (180 minutes total) with this structure:\n- Introduction: 10 mins\n- Step 1: 40 mins\n- Step 2a: 40 mins\n- Step 2b: 40 mins\n- Step 3: 40 mins\n- Session Review: 10 mins\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON. All values must be strings.\n\n{\n  \"learning_outcomes\": \"3-4 outcomes starting with Bloom's verbs, each on new line starting with dash\",\n  \"references\": \"2-3 APA formatted references relevant to this topic\",\n  \"learning_aids\": \"3-5 physical or digital learning aids\",\n  \"safety_requirements\": \"relevant safety requirements for this session\",\n  \"intro_activity\": \"What trainer does in introduction — board work, attendance, recap, bridge-in\",\n  \"step1_trainer\": \"Trainer activity for Step 1 with named strategy\",\n  \"step1_trainee\": \"Trainee activity for Step 1 with named strategy\",\n  \"step1_time\": \"40 mins\",\n  \"step2a_trainer\": \"Trainer activity for Step 2a with named strategy\",\n  \"step2a_trainee\": \"Trainee activity for Step 2a with named strategy\",\n  \"step2a_time\": \"40 mins\",\n  \"step2b_trainer\": \"Trainer activity for Step 2b with named strategy\",\n  \"step2b_trainee\": \"Trainee activity for Step 2b with named strategy\",\n  \"step2b_time\": \"40 mins\",\n  \"step3_trainer\": \"Trainer activity for Step 3 with named strategy\",\n  \"step3_trainee\": \"Trainee activity for Step 3 with named strategy\",\n  \"step3_time\": \"40 mins\",\n  \"session_review\": \"How trainer and trainees summarise the session\",\n  \"follow_up\": \"Extended activity or homework for trainees\",\n  \"total_time\": \"180 mins\"\n}\n`;\n\n// ============================================================\n// PROMPT 2 — TEACHER'S NOTES ONLY\n// ============================================================\nconst promptTN = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write detailed, comprehensive teacher's notes for Level 6 practical units.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\nDo NOT use markdown formatting in any field values. No ##, no **, no *, no -- bullets.\nFor section headings use CAPS. For lists use numbers (1. 2. 3.) or letters (a. b. c.).\nWrite in flowing, formal prose where possible. This content goes into Google Docs directly.\n\n=== BLOOM'S TAXONOMY VERBS ===\n${bloomsText}\n\n=== SESSION CONTEXT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLevel: 6\nSession Title: ${sessionTitle}\nSession Topic Hints: ${sessionHints}\nSpecial Instructions: ${specialInstr}\nLearning Plan Context: ${lpContext}\n\n=== TEACHER'S NOTES REQUIREMENTS ===\nThe trainer teaches Level 6 practical units (Networking, Mathematics).\nSessions are 3 hours long.\nContent notes must be detailed enough to guide the trainer through the \nfull session without referring to other materials.\nWorked examples must include all three types:\n1. Configuration walkthrough (step by step)\n2. Troubleshooting scenario (diagnose and fix)\n3. Diagram explanation (describe what to draw or show)\nPractical guides must be written separately for trainer and student.\nDo NOT use markdown. Use plain numbered lists and CAPS for section headings.\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON. All values must be strings.\n\n{\n  \"tn_learning_outcomes\": \"3-4 outcomes written as trainer reference statements\",\n  \"prerequisites\": \"What students must already know — plain numbered list\",\n  \"content_notes\": \"Detailed subject matter — theory, formulas, concepts, procedures, definitions. Use CAPS for sub-headings. Written in formal prose. Must be comprehensive enough to guide a full 3-hour session.\",\n  \"worked_examples\": \"Three clearly labelled examples: CONFIGURATION WALKTHROUGH, TROUBLESHOOTING SCENARIO, DIAGRAM EXPLANATION. Each with numbered steps.\",\n  \"misconceptions\": \"5 common mistakes students make and how to address each. Numbered list.\",\n  \"tn_questions_low\": \"2-3 questions at Remember and Understand level\",\n  \"tn_questions_mid\": \"2-3 questions at Apply and Analyse level\",\n  \"tn_questions_high\": \"2-3 questions at Evaluate and Create level\",\n  \"practical_trainer_guide\": \"Numbered steps for what the trainer does during the practical\",\n  \"practical_student_guide\": \"Numbered lab sheet steps for students to follow\",\n  \"assessment_knowledge\": \"One question or method to check knowledge\",\n  \"assessment_skill\": \"One practical task to check skill\",\n  \"assessment_attitude\": \"One observable behaviour to check attitude\",\n  \"tn_references\": \"2-3 APA references plus 1-2 further reading suggestions for students\"\n}\n`;\n\nreturn [{\n  json: {\n    prompt_sp: promptSP,\n    prompt_tn: promptTN,\n    // all pass-through fields stay the same\n    unit_title: unitTitle,\n    unit_code: unitCode,\n    class_name: className,\n    num_learners: numLearners,\n    week_no: weekNo,\n    session_date: sessionDate,\n    session_time: sessionTime,\n    session_title: sessionTitle,\n    trainer_name: profile['trainer_name'] || '',\n    admission_no: profile['admission_no'] || '',\n    institution: profile['institution'] || '',\n    level: profile['level'] || '6',\n    template_doc_id: profile['session_plan_template_id'] || '',\n    tn_template_doc_id: profile['teachers_notes_template_id'] || '',\n    output_folder_id: profile['output_folder_id'] || '',\n    date_prepared: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -685,7 +685,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const p = $('SP Node 5b').first().json;\nconst docId = $('SP Node 6b').first().json.id;\n\nconst placeholders = [\n  ['{{unit_title}}',          p['{{unit_title}}']],\n  ['{{unit_code}}',           p['{{unit_code}}']],\n  ['{{trainer_name}}',        p['{{trainer_name}}']],\n  ['{{admission_no}}',        p['{{admission_no}}']],\n  ['{{institution}}',         p['{{institution}}']],\n  ['{{level}}',               p['{{level}}']],\n  ['{{class_name}}',          p['{{class_name}}']],\n  ['{{num_learners}}',        p['{{num_learners}}']],\n  ['{{week_no}}',             p['{{week_no}}']],\n  ['{{session_date}}',        p['{{session_date}}']],\n  ['{{session_time}}',        p['{{session_time}}']],\n  ['{{session_title}}',       p['{{session_title}}']],\n  ['{{learning_outcomes}}',   p['{{learning_outcomes}}']],\n  ['{{references}}',          p['{{references}}']],\n  ['{{learning_aids}}',       p['{{learning_aids}}']],\n  ['{{safety_requirements}}', p['{{safety_requirements}}']],\n  ['{{intro_activity}}',      p['{{intro_activity}}']],\n  ['{{step1_trainer}}',       p['{{step1_trainer}}']],\n  ['{{step1_trainee}}',       p['{{step1_trainee}}']],\n  ['{{step1_time}}',          p['{{step1_time}}']],\n  ['{{step2a_trainer}}',      p['{{step2a_trainer}}']],\n  ['{{step2a_trainee}}',      p['{{step2a_trainee}}']],\n  ['{{step2a_time}}',         p['{{step2a_time}}']],\n  ['{{step2b_trainer}}',      p['{{step2b_trainer}}']],\n  ['{{step2b_trainee}}',      p['{{step2b_trainee}}']],\n  ['{{step2b_time}}',         p['{{step2b_time}}']],\n  ['{{step3_trainer}}',       p['{{step3_trainer}}']],\n  ['{{step3_trainee}}',       p['{{step3_trainee}}']],\n  ['{{step3_time}}',          p['{{step3_time}}']],\n  ['{{session_review}}',      p['{{session_review}}']],\n  ['{{follow_up}}',           p['{{follow_up}}']],\n  ['{{total_time}}',          p['{{total_time}}']],\n];\n\nconst requests = placeholders.map(([text, replaceText]) => ({\n  replaceAllText: {\n    containsText: { text, matchCase: true },\n    replaceText: String(replaceText || '')\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    body: { requests }\n  }\n}];"
+        "jsCode": "const p = $('SP Node 5b').first().json;\nconst docId = $('SP Node 6b').first().json.id;\n\nconst clean = (text) => {\n  if (!text) return '';\n  return String(text)\n    .replace(/\\\\n/g, '\\n')\n    .replace(/\\. (Step|STEP)/g, '.\\n$1')\n    .replace(/\\. ([A-Z]{2,}:)/g, '.\\n\\n$1');\n};\n\nconst placeholders = [\n  ['{{learning_outcomes}}',    clean(p['{{learning_outcomes}}'])],\n  ['{{step1_trainer}}',        clean(p['{{step1_trainer}}'])],\n  ['{{step1_trainee}}',        clean(p['{{step1_trainee}}'])],\n  ['{{step2a_trainer}}',       clean(p['{{step2a_trainer}}'])],\n  ['{{step2a_trainee}}',       clean(p['{{step2a_trainee}}'])],\n  ['{{step2b_trainer}}',       clean(p['{{step2b_trainer}}'])],\n  ['{{step2b_trainee}}',       clean(p['{{step2b_trainee}}'])],\n  ['{{step3_trainer}}',        clean(p['{{step3_trainer}}'])],\n  ['{{step3_trainee}}',        clean(p['{{step3_trainee}}'])],\n  ['{{session_review}}',       clean(p['{{session_review}}'])],\n  ['{{follow_up}}',            clean(p['{{follow_up}}'])],\n  // fields that don't need clean()\n  ['{{unit_title}}',           String(p['{{unit_title}}'] || '')],\n  ['{{unit_code}}',            String(p['{{unit_code}}'] || '')],\n  ['{{trainer_name}}',         String(p['{{trainer_name}}'] || '')],\n  ['{{admission_no}}',         String(p['{{admission_no}}'] || '')],\n  ['{{institution}}',          String(p['{{institution}}'] || '')],\n  ['{{level}}',                String(p['{{level}}'] || '')],\n  ['{{class_name}}',           String(p['{{class_name}}'] || '')],\n  ['{{num_learners}}',         String(p['{{num_learners}}'] || '')],\n  ['{{week_no}}',              String(p['{{week_no}}'] || '')],\n  ['{{session_date}}',         String(p['{{session_date}}'] || '')],\n  ['{{session_time}}',         String(p['{{session_time}}'] || '')],\n  ['{{session_title}}',        String(p['{{session_title}}'] || '')],\n  ['{{references}}',           String(p['{{references}}'] || '')],\n  ['{{learning_aids}}',        String(p['{{learning_aids}}'] || '')],\n  ['{{safety_requirements}}',  String(p['{{safety_requirements}}'] || '')],\n  ['{{intro_activity}}',       String(p['{{intro_activity}}'] || '')],\n  ['{{step1_time}}',           String(p['{{step1_time}}'] || '')],\n  ['{{step2a_time}}',          String(p['{{step2a_time}}'] || '')],\n  ['{{step2b_time}}',          String(p['{{step2b_time}}'] || '')],\n  ['{{step3_time}}',           String(p['{{step3_time}}'] || '')],\n  ['{{total_time}}',           String(p['{{total_time}}'] || '')],\n];\n\nconst requests = placeholders.map(([text, replaceText]) => ({\n  replaceAllText: {\n    containsText: { text, matchCase: true },\n    replaceText: String(replaceText || '')\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    body: { requests }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -706,7 +706,7 @@
       "typeVersion": 2,
       "position": [
         224,
-        800
+        672
       ],
       "notes": "This node extracts all AI-generated content and maps it to the exact placeholder names used in your Google Doc template."
     },
@@ -751,7 +751,7 @@
     },
     {
       "parameters": {
-        "operation": "appendOrUpdate",
+        "operation": "append",
         "documentId": {
           "__rl": true,
           "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
@@ -903,8 +903,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        -192,
-        768
+        -160,
+        672
       ],
       "id": "67c3fdda-7bf0-479f-920b-826bbcab242a",
       "name": "Deepseek Chat Model1",
@@ -957,7 +957,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const p = $('SP Node 5b').first().json;\nconst docId = $('TN Node 6c').first().json.id;\n\nconst placeholders = [\n  ['{{institution}}',             p['{{institution}}']],\n  ['{{trainer_name}}',            p['{{trainer_name}}']],\n  ['{{unit_title}}',              p['{{unit_title}}']],\n  ['{{unit_code}}',               p['{{unit_code}}']],\n  ['{{session_title}}',           p['{{session_title}}']],\n  ['{{session_date}}',            p['{{session_date}}']],\n  ['{{class_name}}',              p['{{class_name}}']],\n  ['{{level}}',                   p['{{level}}']],\n  ['{{num_learners}}',            p['{{num_learners}}']],\n  ['{{tn_learning_outcomes}}',    p['{{tn_learning_outcomes}}']],\n  ['{{prerequisites}}',           p['{{prerequisites}}']],\n  ['{{content_notes}}',           p['{{content_notes}}']],\n  ['{{worked_examples}}',         p['{{worked_examples}}']],\n  ['{{misconceptions}}',          p['{{misconceptions}}']],\n  ['{{tn_questions_low}}',        p['{{tn_questions_low}}']],\n  ['{{tn_questions_mid}}',        p['{{tn_questions_mid}}']],\n  ['{{tn_questions_high}}',       p['{{tn_questions_high}}']],\n  ['{{practical_trainer_guide}}', p['{{practical_trainer_guide}}']],\n  ['{{practical_student_guide}}', p['{{practical_student_guide}}']],\n  ['{{assessment_knowledge}}',    p['{{assessment_knowledge}}']],\n  ['{{assessment_skill}}',        p['{{assessment_skill}}']],\n  ['{{assessment_attitude}}',     p['{{assessment_attitude}}']],\n  ['{{tn_references}}',           p['{{tn_references}}']],\n];\n\nconst requests = placeholders.map(([text, replaceText]) => ({\n  replaceAllText: {\n    containsText: { text, matchCase: true },\n    replaceText: String(replaceText || '')\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    body: { requests }\n  }\n}];"
+        "jsCode": "const p = $('TN Node 5c').first().json;\nconst docId = $('TN Node 6c').first().json.id;\n\n// Ensure line breaks are preserved\nconst clean = (text) => {\n  if (!text) return '';\n  return String(text)\n    .replace(/\\\\n/g, '\\n')  // convert escaped \\n to real newline\n    .replace(/\\. (Step|STEP)/g, '.\\n$1')  // force step breaks\n    .replace(/\\. ([A-Z]{2,}:)/g, '.\\n\\n$1'); // force section breaks\n};\n\nconst placeholders = [\n  ['{{institution}}',             p['{{institution}}']],\n  ['{{trainer_name}}',            p['{{trainer_name}}']],\n  ['{{unit_title}}',              p['{{unit_title}}']],\n  ['{{unit_code}}',               p['{{unit_code}}']],\n  ['{{session_title}}',           p['{{session_title}}']],\n  ['{{session_date}}',            p['{{session_date}}']],\n  ['{{class_name}}',              p['{{class_name}}']],\n  ['{{level}}',                   p['{{level}}']],\n  ['{{num_learners}}',            p['{{num_learners}}']],\n  ['{{tn_learning_outcomes}}',    p['{{tn_learning_outcomes}}']],\n  ['{{prerequisites}}',           p['{{prerequisites}}']],\n  ['{{content_notes}}',           clean(p['{{content_notes}}'])],\n  ['{{worked_examples}}',         clean(p['{{worked_examples}}'])],\n  ['{{misconceptions}}',          clean(p['{{misconceptions}}'])],\n  ['{{tn_questions_low}}',        p['{{tn_questions_low}}']],\n  ['{{tn_questions_mid}}',        p['{{tn_questions_mid}}']],\n  ['{{tn_questions_high}}',       p['{{tn_questions_high}}']],\n  ['{{practical_trainer_guide}}', clean(p['{{practical_trainer_guide}}'])],\n  ['{{practical_student_guide}}', clean(p['{{practical_student_guide}}'])],\n  ['{{assessment_knowledge}}',    p['{{assessment_knowledge}}']],\n  ['{{assessment_skill}}',        p['{{assessment_skill}}']],\n  ['{{assessment_attitude}}',     p['{{assessment_attitude}}']],\n  ['{{tn_references}}',           p['{{tn_references}}']],\n];\n\nconst requests = placeholders.map(([text, replaceText]) => ({\n  replaceAllText: {\n    containsText: { text, matchCase: true },\n    replaceText: String(replaceText || '')\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    body: { requests }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1009,7 +1009,7 @@
     },
     {
       "parameters": {
-        "operation": "appendOrUpdate",
+        "operation": "append",
         "documentId": {
           "__rl": true,
           "value": "1Fiytb464zqIx6-OsRWo9dxiP-06wyaEgKrgN7-GGtjE",
@@ -1146,6 +1146,85 @@
         }
       },
       "notes": "Creates a calendar event on the Monday of the target week with a direct link to the generated doc. Color 2 = Sage green."
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "deepseek-v4-flash",
+          "mode": "list",
+          "cachedResultName": "deepseek-v4-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        1328
+      ],
+      "id": "079ce783-469f-460a-887e-7c6db79b5be6",
+      "name": "Deepseek Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "BNXELaIQKx8MVyTn",
+          "name": "Deepseek chat Model"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=={{ $json.prompt_tn }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -160,
+        1152
+      ],
+      "id": "7b1bd814-b89c-46b1-8a51-54628c8ef3b7",
+      "name": "LLM Chain — TN"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// TN NODE 5c — PARSE TEACHER'S NOTES RESPONSE\n// ============================================================\n\nconst rawText = $input.first().json.text;\n\nconst cleaned = rawText\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nlet ai;\ntry {\n  ai = JSON.parse(cleaned);\n} catch(e) {\n  throw new Error('Failed to parse TN JSON: ' + cleaned.substring(0, 300));\n}\n\nconst prev = $('SP Node 3 — Code node').first().json;\n\nreturn [{\n  json: {\n    '{{institution}}':              prev.institution,\n    '{{trainer_name}}':             prev.trainer_name,\n    '{{unit_title}}':               prev.unit_title,\n    '{{unit_code}}':                prev.unit_code,\n    '{{session_title}}':            prev.session_title,\n    '{{session_date}}':             prev.session_date,\n    '{{class_name}}':               prev.class_name,\n    '{{level}}':                    prev.level,\n    '{{num_learners}}':             prev.num_learners,\n    '{{tn_learning_outcomes}}':     ai.tn_learning_outcomes,\n    '{{prerequisites}}':            ai.prerequisites,\n    '{{content_notes}}':            ai.content_notes,\n    '{{worked_examples}}':          ai.worked_examples,\n    '{{misconceptions}}':           ai.misconceptions,\n    '{{tn_questions_low}}':         ai.tn_questions_low,\n    '{{tn_questions_mid}}':         ai.tn_questions_mid,\n    '{{tn_questions_high}}':        ai.tn_questions_high,\n    '{{practical_trainer_guide}}':  ai.practical_trainer_guide,\n    '{{practical_student_guide}}':  ai.practical_student_guide,\n    '{{assessment_knowledge}}':     ai.assessment_knowledge,\n    '{{assessment_skill}}':         ai.assessment_skill,\n    '{{assessment_attitude}}':      ai.assessment_attitude,\n    '{{tn_references}}':            ai.tn_references,\n    // Pass-through for TN nodes\n    _tn_template_doc_id:  prev.tn_template_doc_id,\n    _output_folder_id:    prev.output_folder_id,\n    _class_name:          prev.class_name,\n    _week_no:             prev.week_no,\n    _unit_title:          prev.unit_title,\n    _session_date:        prev.session_date,\n    _session_title:       prev.session_title\n  }\n}];"
+      },
+      "id": "67103124-f6cf-4f9e-9742-828d6e214a2c",
+      "name": "TN Node 5c",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        1152
+      ],
+      "notes": "This node extracts all AI-generated content and maps it to the exact placeholder names used in your Google Doc template."
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2160,
+        864
+      ],
+      "id": "0bdaaade-c259-4fae-ae7f-88ebde1439a1",
+      "name": "End Merge"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2144,
+        320
+      ],
+      "id": "efe1db90-f572-4e02-8461-a104d5eed54d",
+      "name": "End Merge LP"
     }
   ],
   "pinData": {
@@ -1166,6 +1245,91 @@
           "LP Outcomes and Key Points": "- Define AI and recall its fundamental principles\n- Differentiate between AI and human intelligence\nKey Points: What is AI, History of AI, Real world examples",
           "LLN Requirements": "N/A",
           "Special Instructions for AI": "Use relatable Kenyan examples. Students are tech-curious but not yet technical."
+        }
+      }
+    ],
+    "SP Node 5b": [
+      {
+        "json": {
+          "{{unit_title}}": "Understand Artificial Intelligence Concepts",
+          "{{unit_code}}": "ICT/OS/CS/CR/08/6/A",
+          "{{trainer_name}}": "Ben Mugo",
+          "{{admission_no}}": "2025cs162588",
+          "{{institution}}": "KINAP",
+          "{{level}}": "6",
+          "{{class_name}}": "CSMT",
+          "{{num_learners}}": "20",
+          "{{week_no}}": "6",
+          "{{session_date}}": "2026-04-20",
+          "{{session_time}}": "9:00 AM - 12:00 PM",
+          "{{session_title}}": "Introduction to Artificial Intelligence",
+          "{{learning_outcomes}}": "- Explain the concept of artificial intelligence and trace its historical development. - Differentiate between artificial intelligence and human intelligence using key characteristics. - Apply AI principles to identify and evaluate real-world examples, including Kenyan contexts. - Analyse the societal implications of AI through case discussion.",
+          "{{references}}": "Russell, S., & Norvig, P. (2020). Artificial intelligence: A modern approach (4th ed.). Pearson. - McCarthy, J. (2007). What is artificial intelligence? Stanford University. http://www-formal.stanford.edu/jmc/whatisai/whatisai.html - Ng, A. (2018). Machine learning yearning. Self-published.",
+          "{{learning_aids}}": "1. Projector and laptop for slide presentation. 2. Whiteboard and markers. 3. Flipchart paper and marker pens for group work. 4. Internet-connected device to demonstrate Siri and Google Maps. 5. Printed handouts with timeline of AI history.",
+          "{{safety_requirements}}": "1. Ensure all electrical cables are securely routed to prevent tripping. 2. No food or drinks near electronic equipment. 3. Maintain proper posture when using computers. 4. Switch off all devices at the end of the session.",
+          "{{intro_activity}}": "Trainer takes attendance, conducts a brief recap of the previous session (if applicable), then asks trainees to call out one 'smart' technology they use daily. Trainer writes responses on the board and bridges into the topic: 'All these devices use a form of intelligence. Today, we begin exploring artificial intelligence.'",
+          "{{step1_trainer}}": "Trainer uses a Think-Pair-Share strategy. Trainer poses the question: 'What is artificial intelligence? Write down your own definition.' After two minutes, trainees pair up and share. Trainer then calls on pairs to share with the class, recording key ideas on the board. Trainer synthesises the responses into a formal definition: 'AI is the simulation of human intelligence by machines programmed to think and learn.' Trainer then leads a brief lecture on the history of AI (key milestones: 1950s Turing test, 1956 Dartmouth conference, AI winters, modern deep learning), using a timeline slide.",
+          "{{step1_trainee}}": "Trainees individually write their definition of AI (2 minutes). Then they discuss and compare with a partner (3 minutes). Selected pairs share their definitions with the whole class. Trainees listen to the trainer's lecture, take notes on the history of AI, and ask clarifying questions.",
+          "{{step1_time}}": "40 mins",
+          "{{step2a_trainer}}": "Trainer uses a Group Discussion strategy. Trainer divides the class into four groups and gives each group a flipchart sheet divided into two columns: 'AI' and 'Human Intelligence'. Each group discusses and lists characteristics for both, focusing on aspects like learning speed, creativity, emotions, error handling. After 15 minutes, groups present their charts. Trainer facilitates a whole-class comparison, highlighting that AI excels at data processing while humans possess consciousness and empathy. Trainer adds real-world contrast: e.g., Siri can answer questions but cannot feel frustration.",
+          "{{step2a_trainee}}": "Trainees form groups, discuss and write down characteristics of AI vs human intelligence on flipchart. Each group appoints a presenter. Trainees present their findings to the class and participate in the comparative discussion. Trainees note key differences in their notebooks.",
+          "{{step2a_time}}": "40 mins",
+          "{{step2b_trainer}}": "Trainer uses a Gallery Walk strategy. Trainer posts five sheets around the room, each with a real-world AI example: 1. Siri (voice assistant) 2. Google Maps (navigation) 3. M-Pesa fraud detection (Kenyan) 4. JamboPay chatbot (Kenyan) 5. Netflix recommendations. Trainees rotate in pairs, spending 5 minutes at each sheet to write one strength and one limitation of that AI example. After rotation, trainer leads a debrief, discussing how each example demonstrates AI principles. Trainer emphasises the Kenyan examples to enhance relevance.",
+          "{{step2b_trainee}}": "Trainees walk in pairs to each poster, read the example, and write a strength and a limitation in the space provided. They discuss quietly with their partner. After the gallery walk, trainees share their best insights during the debrief and record key examples in their notes.",
+          "{{step2b_time}}": "40 mins",
+          "{{step3_trainer}}": "Trainer uses a Problem-Based Learning strategy. Trainer presents a scenario: 'A local fresh produce vendor wants a simple system to predict which fruits will sell best each week based on weather and previous sales. How could AI help?' Trainees work in the same groups from Step 2a to design a basic AI solution (10 minutes brainstorm, 10 minutes outline, 10 minutes prepare pitch). Groups then present their ideas (10 minutes total for presentations). Trainer provides feedback and connects ideas to AI concepts learnt.",
+          "{{step3_trainee}}": "Trainees form groups, read the problem scenario, brainstorm ideas for an AI solution (e.g., using past data to forecast demand). They outline steps: data collection, pattern recognition, making predictions. Each group prepares a 2-minute pitch. Groups present their solutions to the class. Trainees ask questions to other groups and reflect on how their solution applies AI.",
+          "{{step3_time}}": "40 mins",
+          "{{session_review}}": "Trainer summarises the session: definition of AI, history, differences from human intelligence, and real-world examples. Trainer asks trainees to complete an Exit Ticket on a slip of paper: 'Write one thing you learnt today and one question you still have.' Trainees hand in the slips. Trainer collects them to assess understanding and plan next session.",
+          "{{follow_up}}": "Trainees are asked to research one additional AI application used in Kenya (e.g., Twiga Foods AI, Zumi for traffic, or iProcure) and write a short paragraph explaining how it works and whether it imitates or augments human intelligence. This will be submitted at the beginning of the next session.",
+          "{{total_time}}": "180 mins",
+          "_template_doc_id": "15mPmujhyuAh5eRdkd9CuaQSfOZ9gQM4_EV9hBzR8Y_U",
+          "_output_folder_id": "1N-OJ5I2SoI_3Y0JM7fB4aR8sdF6c2xRx",
+          "_class_name": "CSMT",
+          "_week_no": "6",
+          "_unit_title": "Understand Artificial Intelligence Concepts",
+          "_session_date": "2026-04-20",
+          "_session_title": "Introduction to Artificial Intelligence",
+          "_tn_template_doc_id": "11wZm47ucQeuQoHsSGAGqpIzdgFngRQysuUGVkr8Ktgk"
+        }
+      }
+    ],
+    "TN Node 5c": [
+      {
+        "json": {
+          "{{institution}}": "KINAP",
+          "{{trainer_name}}": "Ben Mugo",
+          "{{unit_title}}": "Understand Artificial Intelligence Concepts",
+          "{{unit_code}}": "ICT/OS/CS/CR/08/6/A",
+          "{{session_title}}": "Introduction to Artificial Intelligence",
+          "{{session_date}}": "2026-04-20",
+          "{{class_name}}": "CSMT",
+          "{{level}}": "6",
+          "{{num_learners}}": "20",
+          "{{tn_learning_outcomes}}": "By the end of this session, the trainer will have enabled students to define artificial intelligence and trace its historical development. Students will be able to differentiate between AI and human intelligence using key criteria. Learners will identify real-world AI applications, including relatable Kenyan examples. Students will begin to recognise the ethical and practical implications of AI in everyday life.",
+          "{{prerequisites}}": "1. Basic computer literacy, including the ability to navigate a web browser and use search engines. 2. General awareness of the internet and common digital tools such as smartphones or mapping apps. 3. No prior knowledge of artificial intelligence is required; an open and curious attitude towards technology is expected.",
+          "{{content_notes}}": "DEFINITION OF ARTIFICIAL INTELLIGENCE\nArtificial intelligence, commonly abbreviated as AI, refers to the simulation of human intelligence processes by machines, especially computer systems. These processes include learning, the acquisition of information and rules for using it; reasoning, using rules to reach approximate or definite conclusions; and self-correction. AI systems are designed to perceive their environment, process data, and take actions that maximise the chance of achieving specific goals. In simpler terms, AI enables machines to mimic cognitive functions that humans associate with the mind, such as problem-solving and decision-making.\n\nBRIEF HISTORY OF AI\nThe concept of artificial intelligence has roots in ancient myths about mechanical beings, but the formal field began in the mid-20th century. In 1950, Alan Turing published Computing Machinery and Intelligence, proposing the Turing Test as a measure of machine intelligence. The term artificial intelligence was coined in 1956 at the Dartmouth Conference, where pioneers like John McCarthy, Marvin Minsky, Nathaniel Rochester, and Claude Shannon gathered. Early successes included programs that could prove theorems and play chess. However, funding cuts in the 1970s and 1980s, known as AI winters, slowed progress. The rise of machine learning, big data, and powerful computing in the 2000s revived the field. Today, AI is embedded in applications such as voice assistants, autonomous vehicles, and medical diagnostics.\n\nAI VERSUS HUMAN INTELLIGENCE\nHuman intelligence is the ability of the human brain to learn, reason, understand, and adapt to new situations using consciousness, emotions, and creativity. AI, by contrast, lacks genuine consciousness and emotions. AI excels at processing large volumes of data quickly and recognising patterns, but it cannot experience subjective feelings or apply common sense beyond its training. Humans can transfer knowledge across vastly different domains with little effort, whereas AI models are usually specialised for a single task. Additionally, human intelligence is grounded in biological evolution and social interaction, while AI relies on algorithms and data. The key difference is that AI performs tasks based on pre-defined rules or learned patterns, while humans can think abstractly, innovate, and act with moral awareness.\n\nREAL-WORLD EXAMPLES OF AI\nGlobal examples include Siri and Google Maps. Siri uses natural language processing and machine learning to understand spoken commands and provide responses. Google Maps leverages AI to analyse traffic data in real time and suggest optimal routes using predictive algorithms. In Kenya, AI is increasingly used in sectors such as finance, agriculture, and wildlife conservation. M-Pesa employs AI for fraud detection by analysing transaction patterns and flagging anomalies. The Kenya Wildlife Service uses AI-powered drones and camera traps to monitor animal populations and detect poachers. In agriculture, startups like Apollo Agriculture use AI to give smallholder farmers credit scoring and personalised advice based on satellite data and weather patterns.",
+          "{{worked_examples}}": "CONFIGURATION WALKTHROUGH: TRAINING A SIMPLE IMAGE CLASSIFIER USING TEACHABLE MACHINE\n1. Open a web browser and navigate to the Teachable Machine website (teachablemachine.withgoogle.com).\n2. Click on the Get Started button and select Image Project.\n3. Create three classes: Class 1 label as Kenyan Apple, Class 2 as Kenyan Mango, Class 3 as Kenyan Orange.\n4. For each class, upload at least ten images of the respective fruit from the provided folder. The trainer will provide a folder with clear images of each fruit.\n5. Click the Train Model button and wait for the training to complete.\n6. Once trained, test the model by uploading a new image of one of the fruits. Observe the confidence percentage shown for each class.\n7. Discuss why the model might be confident or uncertain, and note the importance of diverse training data.\n\nTROUBLESHOOTING SCENARIO: AI CHATBOT GIVING INCORRECT CUSTOMER SERVICE RESPONSES\nSituation: A Kenyan telecommunications company deploys an AI chatbot to handle customer inquiries. The chatbot is supposed to answer common questions about data bundles and account balances in both English and Swahili. Customers report that the chatbot provides incorrect information when asked in Swahili, such as giving the wrong bundle prices.\nSteps to diagnose and fix:\n1. Review the chatbot's recent conversation logs to identify the specific Swahili phrases that triggered errors.\n2. Compare the expected correct answers with the actual responses. It appears the chatbot's training data is heavily skewed toward English.\n3. Collect additional Swahili examples covering bundle pricing queries. Include variations like 'nunua pakiti' and 'bei ya mbao'.\n4. Add the new labelled examples to the training dataset and retrain the AI model.\n5. Deploy the updated model in a test environment and run a set of test queries in both languages.\n6. Monitor the chatbot's performance for a week and log any remaining errors for further refinement.\n7. Document the fix and recommend periodic updates to training data to reflect new products and pricing.\n\nDIAGRAM EXPLANATION: RELATIONSHIP BETWEEN AI, MACHINE LEARNING, AND DEEP LEARNING\n1. Draw three concentric circles on the whiteboard. Label the outermost large circle as Artificial Intelligence.\n2. Inside that, draw a smaller circle labelled Machine Learning. Inside that, draw the smallest circle labelled Deep Learning.\n3. Explain: The outer circle AI represents any technique that enables machines to mimic human behaviour, including rule-based systems.\n4. Move to the ML circle: This is a subset of AI where machines learn from data without being explicitly programmed for every rule. Examples include linear regression and decision trees.\n5. Move to the DL circle: This is a subset of ML that uses neural networks with many layers to model complex patterns. It powers applications like image recognition and speech translation.\n6. Show a simple example: For spam detection, AI includes rule-based filters; ML includes algorithms trained on labelled emails; DL includes neural networks that understand email semantics.\n7. Emphasise that not all AI uses ML, but all ML and DL are AI.",
+          "{{misconceptions}}": "1. Misconception: AI is the same as a robot with human-like appearance. Correction: AI is software that can exist in many forms such as chatbots, recommendation engines, and mapping tools. Robots are physical machines that may or may not use AI. The key is the intelligence, not the body.\n2. Misconception: AI can think and feel like a human. Correction: AI simulates certain cognitive functions but does not possess consciousness, emotions, or self-awareness. It processes data and patterns; it does not experience the world subjectively.\n3. Misconception: AI never makes mistakes and is always objective. Correction: AI models are only as good as their training data. Biased or incomplete data leads to flawed outputs. AI can produce incorrect or biased results, and human oversight is essential.\n4. Misconception: AI is a recent invention that only exists in science fiction. Correction: The field of AI began in the 1950s, and many everyday tools such as email spam filters, search engines, and voice assistants have used AI for years.\n5. Misconception: AI will replace all human jobs immediately. Correction: AI changes the nature of work by automating routine tasks, but it also creates new jobs and augments human capabilities. Many roles require human judgment, empathy, and creativity that AI cannot replicate.",
+          "{{tn_questions_low}}": "1. Define artificial intelligence in one sentence using your own words.\n2. List three key events or milestones in the history of AI from the 1950s to the present.\n3. Describe one way AI is currently used in Kenya, and explain its benefit.",
+          "{{tn_questions_mid}}": "1. Apply the concept of AI to a Kenyan small-scale farming scenario. Describe what data you would collect and how you would use it to help farmers decide when to plant crops.\n2. Analyse the differences between how a human doctor diagnoses a disease and how an AI diagnostic system works. What are the strengths and weaknesses of each?\n3. Given a set of customer age and purchase history data, explain how you could use a simple machine learning model to predict future purchases. What steps would you follow?",
+          "{{tn_questions_high}}": "1. Evaluate the ethical concerns of using AI-based facial recognition in Kenyan public spaces. Weigh the benefits for security against risks to privacy. Propose a set of guidelines for responsible use.\n2. Design a simple AI-powered solution to help students in your class manage their study schedules and improve academic performance. Outline the features, the data needed, and how the AI would learn from student behaviour.\n3. Critically assess the statement: AI will eventually replace all jobs in customer service. Provide arguments for and against, and suggest how employees can adapt to an AI-driven workplace.",
+          "{{practical_trainer_guide}}": "1. Before the session, prepare a folder of labelled images for the Teachable Machine activity (e.g., three types of Kenyan fruits). Ensure the lab computers or personal devices have internet access.\n2. Begin the practical by demonstrating the Teachable Machine website on the projector. Walk through each step slowly: selecting image project, creating classes, uploading images, and training.\n3. Ask students to form pairs and provide each pair with access to the shared image folder. Circulate the room to ensure all pairs can upload images successfully.\n4. After training, ask each pair to test the model with a new image you provide. Have them record the confidence scores.\n5. Lead a debrief discussion: ask students what happened when the test image was different from the training images. Connect this to the importance of diverse data in AI.\n6. For the troubleshooting scenario, present the chatbot problem on the slide. Guide the class through diagnosing the issue step by step, writing suggestions on the board. Have pairs write their own fix plan.\n7. For the diagram explanation, draw the AI, ML, DL concentric circles on the board while explaining. Ask students to sketch it in their notes and write one example of each layer.\n8. Collect the recorded confidence scores and fix plans as formative assessment.",
+          "{{practical_student_guide}}": "1. Open your device browser and go to the Teachable Machine website.\n2. Click Get Started and select Image Project.\n3. Create three classes: Kenyan Apple, Kenyan Mango, Kenyan Orange.\n4. For each class, use the Upload button to add at least ten images from the shared folder provided by your trainer.\n5. Click the Train Model button and wait for training to finish.\n6. When training is complete, click on the Preview section. Take a new image from the test folder and drag it into the webcam area or upload it. Observe the percentages displayed for each class.\n7. Write down the confidence percentage for the correct class. Repeat with two more test images.\n8. Answer the following in your notebook: Why was the model confident or uncertain? What would happen if you used images of a fruit not in the training set?\n9. Listen as your trainer describes the AI chatbot troubleshooting scenario. In pairs, write down three steps you would take to fix the chatbot's Swahili errors.\n10. On the blank page provided, sketch the three concentric circles for AI, ML, and DL. Under each circle, write one real-world example we discussed in class.",
+          "{{assessment_knowledge}}": "Conduct a five-question multiple-choice quiz on the session content. Example questions: (1) Which year was the term artificial intelligence first used? (2) What does the Turing Test measure? (3) Name one difference between AI and human intelligence. (4) Give an example of AI in Kenya. (5) What is a key limitation of AI compared to humans? Collect answers on paper or using an online poll.",
+          "{{assessment_skill}}": "Assign each student a short individual task: Choose one AI application we discussed (Siri, Google Maps, M-Pesa fraud detection, or Kenya Wildlife Service drones) and write a paragraph explaining how it works in terms of input, processing, and output. They must use at least two key terms from the session such as training data, algorithm, or pattern recognition.",
+          "{{assessment_attitude}}": "Observe the following behaviours during the practical: Do students actively help their partner when uploading images or debugging issues? Do they show curiosity by asking questions about how the model works? Do they demonstrate respect for differing opinions during the debrief discussion? Note any student who shows reluctance to engage and provide encouragement.",
+          "{{tn_references}}": "Russell, S., & Norvig, P. (2020). Artificial Intelligence: A Modern Approach (4th ed.). Pearson.\nMcCarthy, J., Minsky, M. L., Rochester, N., & Shannon, C. E. (1955). A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence.\nNdemo, B., & Weiss, T. (2017). Making sense of the digital transformation in Africa: the case of Kenya. In The Digital Transformation of the Public Sphere (pp. 175-195). Palgrave Macmillan.\nFurther reading for students: (1) Andrew Ng. (2019). AI for Everyone. Coursera. (2) Tegmark, M. (2017). Life 3.0: Being Human in the Age of Artificial Intelligence. Alfred A. Knopf.",
+          "_tn_template_doc_id": "11wZm47ucQeuQoHsSGAGqpIzdgFngRQysuUGVkr8Ktgk",
+          "_output_folder_id": "1N-OJ5I2SoI_3Y0JM7fB4aR8sdF6c2xRx",
+          "_class_name": "CSMT",
+          "_week_no": "6",
+          "_unit_title": "Understand Artificial Intelligence Concepts",
+          "_session_date": "2026-04-20",
+          "_session_title": "Introduction to Artificial Intelligence"
+        },
+        "pairedItem": {
+          "item": 0
         }
       }
     ]
@@ -1391,6 +1555,11 @@
             "node": "Basic LLM Chain",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "LLM Chain — TN",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -1411,11 +1580,6 @@
         [
           {
             "node": "SP Node 6b",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "TN Node 6c",
             "type": "main",
             "index": 0
           }
@@ -1451,7 +1615,13 @@
     },
     "8b. Create Calendar Event1": {
       "main": [
-        []
+        [
+          {
+            "node": "End Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
       ]
     },
     "Deepseek Chat Model1": {
@@ -1502,14 +1672,102 @@
           }
         ]
       ]
+    },
+    "Deepseek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Chain — TN",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Chain — TN": {
+      "main": [
+        [
+          {
+            "node": "TN Node 5c",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TN Node 5c": {
+      "main": [
+        [
+          {
+            "node": "TN Node 6c",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8a. Log to Master Sheet2": {
+      "main": [
+        [
+          {
+            "node": "End Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "8b. Create Calendar Event2": {
+      "main": [
+        [
+          {
+            "node": "End Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "8a. Log to Master Sheet1": {
+      "main": [
+        [
+          {
+            "node": "End Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8a. Log to Master Sheet": {
+      "main": [
+        [
+          {
+            "node": "End Merge LP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8b. Create Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "End Merge LP",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "6ecda7ae-ce30-4692-bb3d-48407a3f5858",
+  "versionId": "f308367c-27ed-4ba4-85c0-469d58071500",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "105873a0e32e3c0a6d5d9f87c5dde92f4ed2f266a2db781ef0a25d96dc99deb8"
