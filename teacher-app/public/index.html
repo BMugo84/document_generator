@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Workflow System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --ink-light: #4a4a6a;
+    --cream: #faf8f3;
+    --gold: #c9a84c;
+    --gold-light: #f0e6c8;
+    --teal: #1a6b5a;
+    --teal-light: #e8f4f1;
+    --red: #c0392b;
+    --border: #e0ddd5;
+    --shadow: 0 4px 24px rgba(26,26,46,0.08);
+    --shadow-lg: 0 12px 48px rgba(26,26,46,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--ink);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.2);
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 1.3rem;
+    letter-spacing: 0.02em;
+  }
+
+  .logo span { color: #fff; font-weight: 300; }
+
+  .header-badge {
+    background: var(--teal);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+
+  /* ── STEP INDICATOR ── */
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 2.5rem;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+    background: #fff;
+    color: var(--ink-light);
+    transition: all 0.3s;
+  }
+
+  .step.active .step-num {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+  }
+
+  .step.done .step-num {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #fff;
+  }
+
+  .step-label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--ink-light);
+    white-space: nowrap;
+  }
+
+  .step.active .step-label { color: var(--teal); font-weight: 600; }
+
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 8px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+    display: none;
+    animation: slideIn 0.3s ease;
+  }
+
+  .card.active { display: block; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+
+  .card-subtitle {
+    font-size: 0.85rem;
+    color: var(--ink-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+
+  /* ── DOC TYPE SELECTOR ── */
+  .doc-type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .doc-type-btn {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.4rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+  }
+
+  .doc-type-btn:hover {
+    border-color: var(--teal);
+    background: var(--teal-light);
+  }
+
+  .doc-type-btn.selected {
+    border-color: var(--teal);
+    background: var(--teal-light);
+  }
+
+  .doc-type-btn .icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .doc-type-btn .label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .doc-type-btn .desc {
+    font-size: 0.75rem;
+    color: var(--ink-light);
+  }
+
+  /* ── UPLOAD AREA ── */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 2.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .upload-area:hover, .upload-area.dragging {
+    border-color: var(--teal);
+    background: var(--teal-light);
+  }
+
+  .upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .upload-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+
+  .upload-area h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  .upload-area p {
+    font-size: 0.82rem;
+    color: var(--ink-light);
+  }
+
+  .file-selected {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--teal-light);
+    border: 1px solid var(--teal);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .file-selected.show { display: flex; }
+
+  /* ── FORM FIELDS ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-grid.full { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field.span-2 { grid-column: span 2; }
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  label .required { color: var(--red); margin-left: 2px; }
+
+  input, select, textarea {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--ink);
+    background: var(--cream);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--teal);
+    background: #fff;
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  .field-hint {
+    font-size: 0.75rem;
+    color: var(--ink-light);
+    font-style: italic;
+  }
+
+  /* ── SESSION CARDS (LP) ── */
+  .sessions-grid {
+    display: grid;
+    gap: 0.8rem;
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .session-card {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .session-card:hover { border-color: var(--teal); background: var(--teal-light); }
+  .session-card.selected { border-color: var(--teal); background: var(--teal-light); }
+
+  .session-card .week-badge {
+    display: inline-block;
+    background: var(--gold-light);
+    color: var(--ink);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+  }
+
+  .session-card h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .session-card p {
+    font-size: 0.78rem;
+    color: var(--ink-light);
+    line-height: 1.4;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--teal);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: #155a4a; transform: translateY(-1px); }
+  .btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--teal);
+    border: 1.5px solid var(--teal);
+  }
+
+  .btn-secondary:hover { background: var(--teal-light); }
+
+  .btn-gold {
+    background: var(--gold);
+    color: #fff;
+  }
+
+  .btn-gold:hover { background: #b8943e; transform: translateY(-1px); }
+
+  .btn-actions {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,46,0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .loading-overlay.show { display: flex; }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  /* ── SUCCESS ── */
+  .success-card {
+    display: none;
+    text-align: center;
+    padding: 3rem 2rem;
+  }
+
+  .success-card.show { display: block; }
+
+  .success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounce 0.5s ease;
+  }
+
+  @keyframes bounce {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  .success-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .success-card p {
+    color: var(--ink-light);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── DIVIDER ── */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    color: var(--ink-light);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── ALERT ── */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.83rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .alert.show { display: block; }
+  .alert-error { background: #fdecea; border-left: 4px solid var(--red); color: var(--red); }
+  .alert-info { background: var(--teal-light); border-left: 4px solid var(--teal); color: var(--teal); }
+
+  /* ── SCROLLBAR ── */
+  .sessions-grid::-webkit-scrollbar { width: 4px; }
+  .sessions-grid::-webkit-scrollbar-track { background: var(--cream); }
+  .sessions-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .field.span-2 { grid-column: span 1; }
+    .doc-type-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { background:var(--border); border-radius:99px; height:8px; overflow:hidden; margin:1rem 0; }
+  .progress-bar { height:100%; background:linear-gradient(90deg,var(--teal),var(--gold)); border-radius:99px; width:0%; transition:width 1s linear; }
+  .progress-label { font-size:0.8rem; color:var(--ink-light); text-align:center; margin-top:6px; }
+  .countdown { font-size:1.4rem; font-weight:600; color:var(--teal); text-align:center; margin-bottom:4px; }
+
+  /* ── DOWNLOAD CARDS ── */
+  .download-grid { display:grid; gap:0.8rem; margin:1.2rem 0; }
+  .download-card { display:flex; align-items:center; gap:12px; padding:14px 16px; border:1.5px solid var(--teal); border-radius:10px; background:var(--teal-light); text-decoration:none; color:var(--ink); transition:all 0.2s; }
+  .download-card:hover { background:var(--teal); color:#fff; transform:translateY(-2px); box-shadow:var(--shadow); }
+  .download-card .doc-icon { font-size:1.6rem; flex-shrink:0; }
+  .download-card .doc-info { flex:1; }
+  .download-card .doc-name { font-size:0.9rem; font-weight:600; }
+  .download-card .doc-type { font-size:0.75rem; opacity:0.7; margin-top:2px; }
+  .download-card .doc-arrow { font-size:1.2rem; opacity:0.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Teacher<span>Flow</span></div>
+  <div class="header-badge">AI Powered</div>
+</header>
+
+<div class="container">
+
+  <!-- Step Indicator -->
+  <div class="steps" id="stepIndicator">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <div class="step-label">Document Type</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <div class="step-label">Upload LP</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <div class="step-label">Fill Details</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step4">
+      <div class="step-num">4</div>
+      <div class="step-label">Review & Submit</div>
+    </div>
+  </div>
+
+  <!-- CARD 1: Document Type -->
+  <div class="card active" id="card1">
+    <h2 class="card-title">What would you like to generate?</h2>
+    <p class="card-subtitle">Select the document type to get started. Each generates a complete, assessor-ready document.</p>
+
+    <div class="doc-type-grid">
+      <div class="doc-type-btn" onclick="selectDocType('Learning Plan')">
+        <div class="icon">📋</div>
+        <span class="label">Learning Plan</span>
+        <span class="desc">Weekly plan covering 1-2 sessions for a specific class and unit</span>
+      </div>
+      <div class="doc-type-btn" onclick="selectDocType('Session Plan')">
+        <div class="icon">📄</div>
+        <span class="label">Session Plan + Notes</span>
+        <span class="desc">Detailed 3-hour session plan with student notes and teacher guide</span>
+      </div>
+    </div>
+
+    <div class="btn-actions">
+      <button class="btn btn-primary" id="btnStep1Next" onclick="goToStep2()" disabled>
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- CARD 2: Upload LP -->
+  <div class="card" id="card2">
+    <h2 class="card-title">Upload your Learning Plan</h2>
+    <p class="card-subtitle" id="card2Subtitle">Upload your .docx Learning Plan. AI will scan it and extract all session details automatically.</p>
+
+    <div id="uploadSection">
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="lpFile" accept=".docx" onchange="handleFileSelect(this)">
+        <div class="upload-icon">📁</div>
+        <h3>Drop your Learning Plan here</h3>
+        <p>or click to browse — .docx files only</p>
+      </div>
+
+      <div class="file-selected" id="fileSelected">
+        <span>📄</span>
+        <span id="fileName">No file selected</span>
+        <span style="color: var(--teal); margin-left: auto;">✓ Ready</span>
+      </div>
+
+      <div class="alert alert-error" id="uploadError"></div>
+
+      <div class="btn-actions">
+        <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+        <button class="btn btn-primary" id="btnExtract" onclick="extractLP()" disabled>
+          🔍 Scan LP with AI
+        </button>
+      </div>
+    </div>
+
+    <!-- LP Session Selector (shown after extraction) -->
+    <div id="sessionSelector" style="display:none">
+      <div class="alert alert-info show" id="extractInfo">
+        ✓ LP scanned successfully. Select the session you want to generate a plan for.
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <strong id="lpUnitTitle" style="font-size: 0.95rem;"></strong>
+        <div style="font-size: 0.8rem; color: var(--ink-light);" id="lpUnitCode"></div>
+      </div>
+
+      <div class="sessions-grid" id="sessionsGrid"></div>
+
+      <div class="btn-actions">
+        <button class="btn btn-secondary" onclick="resetUpload()">← Upload Different LP</button>
+        <button class="btn btn-primary" id="btnSessionNext" onclick="goToStep3()" disabled>
+          Continue →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 3: Fill Details -->
+  <div class="card" id="card3">
+    <h2 class="card-title">Session Details</h2>
+    <p class="card-subtitle">Review and complete the details below. LP fields are pre-filled from your uploaded document.</p>
+
+    <!-- LP FORM -->
+    <div id="lpForm" style="display:none">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label>Unit Title <span class="required">*</span></label>
+          <input type="text" id="lp_unit_title" placeholder="e.g. Understand Artificial Intelligence Concepts">
+        </div>
+        <div class="field">
+          <label>Unit Code <span class="required">*</span></label>
+          <input type="text" id="lp_unit_code" placeholder="e.g. ICT/OS/CS/CR/08/6/A">
+        </div>
+        <div class="field">
+          <label>Class Name <span class="required">*</span></label>
+          <input type="text" id="lp_class_name" placeholder="e.g. CSMT">
+        </div>
+        <div class="field">
+          <label>Number of Learners <span class="required">*</span></label>
+          <input type="number" id="lp_num_learners" placeholder="e.g. 20">
+        </div>
+        <div class="field">
+          <label>Week Number <span class="required">*</span></label>
+          <input type="number" id="lp_week_no" min="1" max="12" placeholder="1-12">
+        </div>
+        <div class="field">
+          <label>Date of Week (Monday) <span class="required">*</span></label>
+          <input type="date" id="lp_week_date">
+        </div>
+        <div class="field span-2">
+          <label>Skill or Job Task <span class="required">*</span></label>
+          <input type="text" id="lp_skill_task" placeholder="What should the trainee be able to DO by end of unit?">
+        </div>
+        <div class="field span-2">
+          <label>Raw Learning Objectives <span class="required">*</span></label>
+          <textarea id="lp_objectives" placeholder="Write in plain language. One per line. AI will upgrade to Bloom's language."></textarea>
+        </div>
+        <div class="field span-2">
+          <label>Session 1 Title <span class="required">*</span></label>
+          <input type="text" id="lp_session1_title" placeholder="e.g. Introduction to AI">
+        </div>
+        <div class="field span-2">
+          <label>Session 1 Topic Hints <span class="required">*</span></label>
+          <textarea id="lp_session1_hints" placeholder="Key concepts, subtopics, anything specific for session 1"></textarea>
+        </div>
+        <div class="field span-2">
+          <label>Session 2 Title <span class="field-hint">(optional)</span></label>
+          <input type="text" id="lp_session2_title" placeholder="Leave blank if only one session this week">
+        </div>
+        <div class="field span-2">
+          <label>Session 2 Topic Hints <span class="field-hint">(optional)</span></label>
+          <textarea id="lp_session2_hints" placeholder="Key concepts for session 2"></textarea>
+        </div>
+        <div class="field span-2">
+          <label>Special Instructions for AI <span class="field-hint">(optional)</span></label>
+          <textarea id="lp_special" placeholder="e.g. Use Kenyan examples. Students struggled last week with X."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- SP FORM -->
+    <div id="spForm" style="display:none">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label>Unit Code / Title <span class="required">*</span></label>
+          <input type="text" id="sp_unit_code_title" placeholder="Pre-filled from LP">
+        </div>
+        <div class="field">
+          <label>Class Name <span class="required">*</span></label>
+          <input type="text" id="sp_class_name" placeholder="e.g. CSMT">
+        </div>
+        <div class="field">
+          <label>Number of Learners <span class="required">*</span></label>
+          <input type="number" id="sp_num_learners" placeholder="e.g. 20">
+        </div>
+        <div class="field">
+          <label>Week Number <span class="required">*</span></label>
+          <input type="number" id="sp_week_no" min="1" max="12" placeholder="1-12">
+        </div>
+        <div class="field">
+          <label>Session Number <span class="required">*</span></label>
+          <input type="text" id="sp_session_no" placeholder="e.g. 5&6 or 7&8">
+        </div>
+        <div class="field">
+          <label>Session Date <span class="required">*</span></label>
+          <input type="date" id="sp_session_date">
+        </div>
+        <div class="field">
+          <label>Session Time <span class="required">*</span></label>
+          <input type="text" id="sp_session_time" placeholder="e.g. 8:00 AM - 11:00 AM">
+        </div>
+        <div class="field span-2">
+          <label>Session Title <span class="required">*</span> <span class="field-hint">— pre-filled from LP</span></label>
+          <input type="text" id="sp_session_title" placeholder="Pre-filled from LP">
+        </div>
+        <div class="field span-2">
+          <label>Session Topic Hints <span class="field-hint">— pre-filled from LP</span></label>
+          <textarea id="sp_session_hints" placeholder="Pre-filled from LP key points"></textarea>
+        </div>
+        <div class="field span-2">
+          <label>LP Outcomes and Key Points <span class="field-hint">— pre-filled from LP</span></label>
+          <textarea id="sp_lp_context" placeholder="Pre-filled from LP" style="min-height: 120px;"></textarea>
+        </div>
+        <div class="field span-2">
+          <label>LLN Requirements <span class="field-hint">(optional)</span></label>
+          <input type="text" id="sp_lln" placeholder="e.g. N/A or specific literacy/numeracy requirements">
+        </div>
+        <div class="field span-2">
+          <label>Special Instructions for AI <span class="field-hint">(optional)</span></label>
+          <textarea id="sp_special" placeholder="e.g. Focus on practical examples. Students need more hands-on work."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-error" id="formError"></div>
+
+    <div class="btn-actions">
+      <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goToReview()">Review →</button>
+    </div>
+  </div>
+
+  <!-- CARD 4: Review & Submit -->
+  <div class="card" id="card4">
+    <h2 class="card-title">Review & Submit</h2>
+    <p class="card-subtitle">Check everything looks correct before submitting. n8n will generate your documents automatically.</p>
+
+    <div id="reviewContent" style="background: var(--cream); border-radius: 10px; padding: 1.2rem; font-size: 0.85rem; line-height: 2;"></div>
+
+    <div class="alert alert-error" id="submitError"></div>
+
+    <div class="btn-actions">
+      <button class="btn btn-secondary" onclick="goToStep(3)">← Edit</button>
+      <button class="btn btn-gold" onclick="submitWorkflow()">
+        🚀 Generate Documents
+      </button>
+    </div>
+
+    <div class="success-card" id="successCard">
+      <!-- Processing state -->
+      <div id="processingState">
+        <div class="success-icon">⚙️</div>
+        <h2>Generating your documents...</h2>
+        <p>AI is writing your session plan and notes. This takes about 60 seconds.</p>
+        <div class="countdown" id="countdown">60s</div>
+        <div class="progress-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">Starting up...</div>
+      </div>
+
+      <!-- Done state -->
+      <div id="doneState" style="display:none">
+        <div class="success-icon">🎉</div>
+        <h2>Documents are ready!</h2>
+        <p>Click any document below to open it in Google Docs. You can edit and download from there.</p>
+        <div class="download-grid" id="downloadGrid"></div>
+        <button class="btn btn-primary" style="margin-top:1rem" onclick="resetApp()">Generate Another →</button>
+      </div>
+
+      <!-- Timeout state -->
+      <div id="timeoutState" style="display:none">
+        <div class="success-icon">⏱️</div>
+        <h2>Still processing...</h2>
+        <p>It's taking longer than expected. Check Google Drive and your Calendar — documents should appear shortly.</p>
+        <button class="btn btn-primary" style="margin-top:1rem" onclick="resetApp()">Generate Another →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Scanning your Learning Plan...</div>
+</div>
+
+<script>
+// ── STATE ──
+let state = {
+  docType: null,
+  lpData: null,
+  selectedSession: null,
+  currentStep: 1
+};
+
+// ── STEP NAVIGATION ──
+function goToStep(n) {
+  document.querySelectorAll('.card').forEach((c, i) => {
+    c.classList.toggle('active', i + 1 === n);
+  });
+  document.querySelectorAll('.step').forEach((s, i) => {
+    s.classList.remove('active', 'done');
+    if (i + 1 < n) s.classList.add('done');
+    if (i + 1 === n) s.classList.add('active');
+  });
+  state.currentStep = n;
+}
+
+// ── DOC TYPE ──
+function selectDocType(type) {
+  state.docType = type;
+  document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('btnStep1Next').disabled = false;
+}
+
+function goToStep2() {
+  if (!state.docType) return;
+
+  if (state.docType === 'Learning Plan') {
+    document.getElementById('card2Subtitle').textContent =
+      'Upload your .docx Learning Plan to pre-fill fields, or skip and fill manually.';
+    document.getElementById('uploadSection').style.display = 'block';
+    document.getElementById('sessionSelector').style.display = 'none';
+  } else {
+    document.getElementById('card2Subtitle').textContent =
+      'Upload the Learning Plan for this unit. AI will extract session details and pre-fill your Session Plan form.';
+  }
+
+  goToStep(2);
+}
+
+// ── FILE UPLOAD ──
+function handleFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (!file.name.endsWith('.docx')) {
+    showAlert('uploadError', 'Please upload a .docx file only.');
+    return;
+  }
+
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSelected').classList.add('show');
+  document.getElementById('btnExtract').disabled = false;
+  hideAlert('uploadError');
+}
+
+async function extractLP() {
+  const fileInput = document.getElementById('lpFile');
+  if (!fileInput.files[0]) return;
+
+  showLoading('Scanning your Learning Plan with AI...');
+
+  const formData = new FormData();
+  formData.append('lpFile', fileInput.files[0]);
+
+  try {
+    const response = await fetch('/api/extract-lp', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+    hideLoading();
+
+    if (!result.success) {
+      showAlert('uploadError', 'Failed to extract LP: ' + result.error);
+      return;
+    }
+
+    state.lpData = result.data;
+    displaySessions(result.data);
+
+  } catch (error) {
+    hideLoading();
+    showAlert('uploadError', 'Network error: ' + error.message);
+  }
+}
+
+function displaySessions(lpData) {
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('sessionSelector').style.display = 'block';
+
+  const firstSession = Array.isArray(lpData) ? lpData[0] : lpData;
+  document.getElementById('lpUnitTitle').textContent = firstSession.unit_title || '';
+  document.getElementById('lpUnitCode').textContent = firstSession.unit_code || '';
+
+  const grid = document.getElementById('sessionsGrid');
+  grid.innerHTML = '';
+
+  if (state.docType === 'Learning Plan') {
+    // For LP — show all weeks grouped
+    const weeks = {};
+    lpData.sessions.forEach(s => {
+      if (!weeks[s.week]) weeks[s.week] = [];
+      weeks[s.week].push(s);
+    });
+
+    Object.entries(weeks).forEach(([week, sessions]) => {
+      const card = document.createElement('div');
+      card.className = 'session-card';
+      card.innerHTML = `
+        <div class="week-badge">Week ${week}</div>
+        <h4>${sessions.map(s => s.session_title).join(' + ')}</h4>
+        <p>Sessions: ${sessions.map(s => s.session_no).join(', ')}</p>
+      `;
+      card.onclick = () => {
+        document.querySelectorAll('.session-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        state.selectedSession = { week, sessions };
+        document.getElementById('btnSessionNext').disabled = false;
+      };
+      grid.appendChild(card);
+    });
+  } else {
+    // For SP — group sessions into pairs
+    const sessionList = Array.isArray(lpData) ? lpData : (lpData.sessions || []);
+    const pairs = [];
+    for (let i = 0; i < sessionList.length; i += 2) {
+      pairs.push({ session1: sessionList[i], session2: sessionList[i + 1] || null });
+    }
+
+    pairs.forEach((pair) => {
+      const s1 = pair.session1;
+      const s2 = pair.session2;
+      const sessionNos = s2 ? `${s1.session_no} & ${s2.session_no}` : s1.session_no;
+      const card = document.createElement('div');
+      card.className = 'session-card';
+      card.innerHTML = `
+        <div class="week-badge">Week ${s1.week} · Sessions ${sessionNos}</div>
+        <h4>${s1.session_title}</h4>
+        <p style="font-size:0.75rem;color:var(--teal);font-weight:600;margin-bottom:4px;">
+          📋 Session 1: ${s1.session_no} &nbsp;|&nbsp; 📋 Session 2: ${s2 ? s2.session_no : 'N/A'}
+        </p>
+        <p>${(s1.outcomes || '').substring(0, 100)}...</p>
+      `;
+      card.onclick = () => {
+        document.querySelectorAll('.session-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        state.selectedSession = pair;
+        document.getElementById('btnSessionNext').disabled = false;
+      };
+      grid.appendChild(card);
+    });
+  }
+}
+
+function resetUpload() {
+  document.getElementById('uploadSection').style.display = 'block';
+  document.getElementById('sessionSelector').style.display = 'none';
+  document.getElementById('lpFile').value = '';
+  document.getElementById('fileSelected').classList.remove('show');
+  document.getElementById('btnExtract').disabled = true;
+  state.lpData = null;
+  state.selectedSession = null;
+}
+
+function goToStep3() {
+  if (!state.selectedSession) return;
+
+  // Show correct form
+  document.getElementById('lpForm').style.display = state.docType === 'Learning Plan' ? 'block' : 'none';
+  document.getElementById('spForm').style.display = state.docType === 'Session Plan' ? 'block' : 'none';
+
+  // Pre-fill fields
+  if (state.lpData && state.selectedSession) {
+    if (state.docType === 'Learning Plan') {
+      const { week, sessions } = state.selectedSession;
+      document.getElementById('lp_unit_title').value = state.lpData.unit_title || '';
+      document.getElementById('lp_unit_code').value = state.lpData.unit_code || '';
+      document.getElementById('lp_week_no').value = week;
+      if (sessions[0]) {
+        document.getElementById('lp_session1_title').value = sessions[0].session_title || '';
+        document.getElementById('lp_session1_hints').value = sessions[0].key_points || '';
+      }
+      if (sessions[1]) {
+        document.getElementById('lp_session2_title').value = sessions[1].session_title || '';
+        document.getElementById('lp_session2_hints').value = sessions[1].key_points || '';
+      }
+      document.getElementById('lp_objectives').value = sessions.map(s => s.outcomes).join('\n') || '';
+    } else {
+      const pair = state.selectedSession;
+      const s1 = pair.session1 || pair;
+      const s2 = pair.session2 || null;
+      const firstSession = Array.isArray(state.lpData) ? state.lpData[0] : state.lpData;
+      const unitCodeTitle = `${firstSession.unit_code} — ${firstSession.unit_title}`;
+      const sessionNos = s2 ? `${s1.session_no}&${s2.session_no}` : s1.session_no;
+
+      document.getElementById('sp_unit_code_title').value = unitCodeTitle;
+      document.getElementById('sp_week_no').value = s1.week || '';
+      document.getElementById('sp_session_no').value = sessionNos;
+      document.getElementById('sp_session_title').value = s1.session_title || '';
+      document.getElementById('sp_session_hints').value =
+        `Session 1 Key Points:\n${s1.key_points || ''}` +
+        (s2 ? `\n\nSession 2 Key Points:\n${s2.key_points || ''}` : '');
+      document.getElementById('sp_lp_context').value =
+        `Session 1 Outcomes: ${s1.outcomes || ''}\nSession 1 Key Points: ${s1.key_points || ''}\nSession 1 Activities: ${s1.activities || ''}` +
+        (s2 ? `\n\nSession 2 Outcomes: ${s2.outcomes || ''}\nSession 2 Key Points: ${s2.key_points || ''}\nSession 2 Activities: ${s2.activities || ''}` : '');
+    }
+  }
+
+  goToStep(3);
+}
+
+// ── REVIEW ──
+function goToReview() {
+  // Validate required fields
+  const requiredFields = state.docType === 'Learning Plan'
+    ? [
+        { id: 'lp_unit_title', label: 'Unit Title' },
+        { id: 'lp_unit_code', label: 'Unit Code' },
+        { id: 'lp_class_name', label: 'Class Name' },
+        { id: 'lp_num_learners', label: 'Number of Learners' },
+        { id: 'lp_week_no', label: 'Week Number' },
+        { id: 'lp_week_date', label: 'Date of Week' },
+        { id: 'lp_skill_task', label: 'Skill or Job Task' },
+        { id: 'lp_objectives', label: 'Learning Objectives' },
+        { id: 'lp_session1_title', label: 'Session 1 Title' },
+        { id: 'lp_session1_hints', label: 'Session 1 Topic Hints' },
+      ]
+    : [
+        { id: 'sp_unit_code_title', label: 'Unit Code / Title' },
+        { id: 'sp_class_name', label: 'Class Name' },
+        { id: 'sp_num_learners', label: 'Number of Learners' },
+        { id: 'sp_week_no', label: 'Week Number' },
+        { id: 'sp_session_no', label: 'Session Number' },
+        { id: 'sp_session_date', label: 'Session Date' },
+        { id: 'sp_session_time', label: 'Session Time' },
+        { id: 'sp_session_title', label: 'Session Title' },
+      ];
+
+  const missing = requiredFields.filter(f => !document.getElementById(f.id).value.trim());
+
+  if (missing.length > 0) {
+    requiredFields.forEach(f => {
+      const el = document.getElementById(f.id);
+      el.style.borderColor = el.value.trim() ? 'var(--border)' : 'var(--red)';
+    });
+    showAlert('formError', '⚠ Please fill in: ' + missing.map(f => f.label).join(', '));
+    return;
+  }
+
+  // Clear red borders
+  requiredFields.forEach(f => {
+    document.getElementById(f.id).style.borderColor = '';
+  });
+  hideAlert('formError');
+  const data = collectFormData();
+  const content = document.getElementById('reviewContent');
+
+  let html = `<strong>Document Type:</strong> ${data['Document Type']}<br>`;
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (key === 'Document Type') return;
+    if (!value) return;
+    const displayVal = String(value).length > 80 ? String(value).substring(0, 80) + '...' : value;
+    html += `<strong>${key}:</strong> ${displayVal}<br>`;
+  });
+
+  content.innerHTML = html;
+  document.getElementById('successCard').classList.remove('show');
+  document.getElementById('card4').querySelector('.card-title').style.display = 'block';
+  document.getElementById('card4').querySelector('.card-subtitle').style.display = 'block';
+  document.getElementById('reviewContent').style.display = 'block';
+  document.getElementById('card4').querySelector('.btn-actions').style.display = 'flex';
+
+  goToStep(4);
+}
+
+// ── COLLECT FORM DATA ──
+function collectFormData() {
+  if (state.docType === 'Learning Plan') {
+    return {
+      'Document Type': 'Learning Plan',
+      'Unit Title': document.getElementById('lp_unit_title').value,
+      'Unit Code': document.getElementById('lp_unit_code').value,
+      'Class Name': document.getElementById('lp_class_name').value,
+      'Number of Learners': document.getElementById('lp_num_learners').value,
+      'Week Number': document.getElementById('lp_week_no').value,
+      'Date of Week (Monday)': document.getElementById('lp_week_date').value,
+      'Skill or Job Task': document.getElementById('lp_skill_task').value,
+      'Raw Learning Objectives': document.getElementById('lp_objectives').value,
+      'Session 1 Title': document.getElementById('lp_session1_title').value,
+      'Session 1 - Topic Hints': document.getElementById('lp_session1_hints').value,
+      'Session 2 Title': document.getElementById('lp_session2_title').value,
+      'Session 2 - Topic Hints': document.getElementById('lp_session2_hints').value,
+      'Special Instructions for AI': document.getElementById('lp_special').value,
+    };
+  } else {
+    return {
+      'Document Type': 'Session Plan',
+      'Unit Code/Title': document.getElementById('sp_unit_code_title').value,
+      'Class Name': document.getElementById('sp_class_name').value,
+      'Number of Learners': document.getElementById('sp_num_learners').value,
+      'Week Number': document.getElementById('sp_week_no').value,
+      'Session Number': document.getElementById('sp_session_no').value,
+      'Session Date': document.getElementById('sp_session_date').value,
+      'Session Time': document.getElementById('sp_session_time').value,
+      'Session Title': document.getElementById('sp_session_title').value,
+      'Session Topic Hints': document.getElementById('sp_session_hints').value,
+      'LP Outcomes and Key Points': document.getElementById('sp_lp_context').value,
+      'LLN Requirements': document.getElementById('sp_lln').value,
+      'Special Instructions for AI': document.getElementById('sp_special').value,
+    };
+  }
+}
+
+// ── SUBMIT ──
+async function submitWorkflow() {
+  const data = collectFormData();
+
+  showLoading('Sending to n8n workflow...');
+
+  try {
+    // Generate unique job ID
+    const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    const response = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...data, jobId })
+    });
+
+    const result = await response.json();
+    hideLoading();
+
+    if (!result.success) {
+      showAlert('submitError', 'Failed to trigger workflow: ' + result.error);
+      return;
+    }
+
+    // Show processing UI
+    document.getElementById('card4').querySelector('.card-title').style.display = 'none';
+    document.getElementById('card4').querySelector('.card-subtitle').style.display = 'none';
+    document.getElementById('reviewContent').style.display = 'none';
+    document.getElementById('card4').querySelector('.btn-actions').style.display = 'none';
+    document.getElementById('successCard').classList.add('show');
+
+    // Mark all steps done
+    document.querySelectorAll('.step').forEach(s => {
+      s.classList.remove('active');
+      s.classList.add('done');
+    });
+
+    // Start polling
+    startPolling(jobId);
+
+  } catch (error) {
+    hideLoading();
+    showAlert('submitError', 'Network error: ' + error.message);
+  }
+}
+
+// ── POLLING ──
+function startPolling(jobId) {
+  const TOTAL_SECONDS = 60;
+  const POLL_INTERVAL = 5000; // poll every 5 seconds
+  let elapsed = 0;
+  const progressBar = document.getElementById('progressBar');
+  const progressLabel = document.getElementById('progressLabel');
+  const countdown = document.getElementById('countdown');
+
+  const labels = [
+    'Reading your Learning Plan...',
+    'Building the AI prompt...',
+    'DeepSeek is writing session content...',
+    'Generating teacher notes...',
+    'Copying document templates...',
+    'Filling placeholders...',
+    'Saving to Google Drive...',
+    'Creating calendar events...',
+    'Almost done...',
+  ];
+  let labelIdx = 0;
+
+  const timer = setInterval(() => {
+    elapsed += 1;
+    const pct = Math.min((elapsed / TOTAL_SECONDS) * 100, 95);
+    progressBar.style.width = pct + '%';
+    countdown.textContent = Math.max(TOTAL_SECONDS - elapsed, 0) + 's';
+
+    // Cycle through labels every 7 seconds
+    if (elapsed % 7 === 0 && labelIdx < labels.length - 1) {
+      labelIdx++;
+      progressLabel.textContent = labels[labelIdx];
+    }
+
+    if (elapsed >= TOTAL_SECONDS) {
+      clearInterval(timer);
+    }
+  }, 1000);
+
+  // Poll for completion
+  const poller = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/status/${jobId}`);
+      const job = await res.json();
+
+      if (job.status === 'done') {
+        clearInterval(poller);
+        clearInterval(timer);
+        showDownloads(job.documents);
+      } else if (job.status === 'error') {
+        clearInterval(poller);
+        clearInterval(timer);
+        showTimeout();
+      }
+    } catch(e) {
+      console.error('Poll error:', e);
+    }
+  }, POLL_INTERVAL);
+
+  // Timeout after 70 seconds
+  setTimeout(() => {
+    clearInterval(poller);
+    clearInterval(timer);
+    // Check one last time
+    fetch(`/api/status/${jobId}`)
+      .then(r => r.json())
+      .then(job => {
+        if (job.status === 'done') {
+          showDownloads(job.documents);
+        } else {
+          showTimeout();
+        }
+      })
+      .catch(() => showTimeout());
+  }, 70000);
+}
+
+function showDownloads(documents) {
+  document.getElementById('processingState').style.display = 'none';
+  document.getElementById('doneState').style.display = 'block';
+
+  const grid = document.getElementById('downloadGrid');
+  grid.innerHTML = '';
+
+  if (!documents || documents.length === 0) {
+    grid.innerHTML = '<p style="color:var(--ink-light); font-size:0.85rem;">No document links received — check Google Drive directly.</p>';
+    return;
+  }
+
+  const icons = {
+    'Learning Plan': '📋',
+    'Session Plan': '📄',
+    "Teacher's Notes": '📝',
+    'Student Notes': '📚',
+  };
+
+  documents.forEach(doc => {
+    const a = document.createElement('a');
+    a.className = 'download-card';
+    a.href = doc.url;
+    a.target = '_blank';
+    a.innerHTML = `
+      <div class="doc-icon">${icons[doc.type] || '📄'}</div>
+      <div class="doc-info">
+        <div class="doc-name">${doc.name || doc.type}</div>
+        <div class="doc-type">${doc.type} · Click to open in Google Docs</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    `;
+    grid.appendChild(a);
+  });
+}
+
+function showTimeout() {
+  document.getElementById('processingState').style.display = 'none';
+  document.getElementById('timeoutState').style.display = 'block';
+}
+
+// ── RESET ──
+function resetApp() {
+  state = { docType: null, lpData: null, selectedSession: null, currentStep: 1 };
+  document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+  document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btnStep1Next').disabled = true;
+  document.getElementById('fileSelected').classList.remove('show');
+  goToStep(1);
+}
+
+// ── HELPERS ──
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+function showAlert(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideAlert(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// Drag and drop
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragging'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragging'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragging');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    document.getElementById('lpFile').files = e.dataTransfer.files;
+    handleFileSelect(document.getElementById('lpFile'));
+  }
+});
+</script>
+</body>
+</html>

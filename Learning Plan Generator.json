@@ -24,8 +24,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -1008,
-        160
+        -1024,
+        -592
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -58,8 +58,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -1008,
-        320
+        -1024,
+        -432
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -92,8 +92,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -1008,
-        496
+        -1024,
+        -256
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -112,8 +112,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -448,
-        352
+        -464,
+        -400
       ],
       "notes": "SETUP: Check the form field names match exactly what Google Forms creates as column headers in your Response Sheet. Adjust the field mapping section if needed."
     },
@@ -126,8 +126,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        208,
-        336
+        192,
+        -416
       ],
       "notes": "This node extracts all AI-generated content and maps it to the exact placeholder names used in your Google Doc template."
     },
@@ -160,8 +160,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        464,
-        336
+        448,
+        -416
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -268,8 +268,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        1568,
-        256
+        1552,
+        -496
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -300,8 +300,8 @@
       "type": "n8n-nodes-base.googleCalendar",
       "typeVersion": 1.2,
       "position": [
-        1568,
-        416
+        1552,
+        -336
       ],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -340,8 +340,8 @@
       "type": "n8n-nodes-base.googleSheetsTrigger",
       "typeVersion": 1,
       "position": [
-        -2064,
-        592
+        -1232,
+        96
       ],
       "id": "f0b79aac-3000-4140-a5a6-90f35e34ab7b",
       "name": "1. Form Response Trigger",
@@ -361,8 +361,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -720,
-        336
+        -736,
+        -416
       ],
       "id": "5c0f2fac-ca57-46e6-aea7-f491961bb573",
       "name": "Merge"
@@ -376,8 +376,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        -160,
-        352
+        -176,
+        -400
       ],
       "id": "4147dc22-0f32-45e1-9bca-5c59b29e8939",
       "name": "Basic LLM Chain"
@@ -389,8 +389,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        784,
-        336
+        768,
+        -416
       ],
       "id": "fb9eaf52-324a-4d29-bc60-e92d862fafdb",
       "name": "Node 7a — Code node: Build Request Body"
@@ -418,8 +418,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1072,
-        336
+        1056,
+        -416
       ],
       "id": "62d64ec2-58c1-4787-b0cc-dc6ce1fc3ed7",
       "name": "Node 7b — HTTP Request node",
@@ -448,13 +448,14 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ Object.entries($json).find(([k]) => k.trim() === 'Document Type')?.[1]?.trim() }}",
+                    "id": "3e3adab0-dbf8-4754-9554-fcaa20ffef85",
+                    "leftValue": "={{ $json.body['Document Type'] }}",
                     "rightValue": "Learning Plan",
                     "operator": {
                       "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "c64c85ad-3ebf-47f2-a263-61cc33d78e04"
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
                   }
                 ],
                 "combinator": "and"
@@ -470,12 +471,13 @@
                 },
                 "conditions": [
                   {
-                    "id": "7403f7cf-0688-494e-b0c0-e73e18d4a77a",
-                    "leftValue": "={{ Object.entries($json).find(([k]) => k.trim() === 'Document Type')?.[1]?.trim() }}",
+                    "id": "b1335ca6-e0c2-4688-b522-fff260f2c0df",
+                    "leftValue": "={{ $json.body['Document Type'] }}",
                     "rightValue": "Session Plan",
                     "operator": {
                       "type": "string",
-                      "operation": "equals"
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
                     }
                   }
                 ],
@@ -489,21 +491,21 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -1872,
-        592
+        -2208,
+        848
       ],
       "id": "b5e5909b-2b9e-47b7-a52e-2bcc262b7378",
       "name": "Switch (Document Type)"
     },
     {
       "parameters": {
-        "jsCode": "// ============================================================\n// NODE 3b — BUILD SESSION PLAN GEMINI PROMPT\n// ============================================================\n\nconst form = $('Extract Form Fields').first().json;\n\nconsole.log('All keys:', JSON.stringify(Object.keys(form)));\nconsole.log('Session date raw:', JSON.stringify(form));\n\n\n\n// Same helper functions from LP\nconst f = (key) => {\n  const nonEmptyMatch = Object.keys(form).find(k =>\n    k.trim() === key.trim() && String(form[k]).trim() !== ''\n  );\n  if (nonEmptyMatch) return String(form[nonEmptyMatch]).trim();\n  const anyMatch = Object.keys(form).find(k => k.trim() === key.trim());\n  return anyMatch ? String(form[anyMatch] || '').trim() : '';\n};\n\nconst excelDateToString = (serial) => {\n  if (!serial || isNaN(serial)) return String(serial || '');\n  const date = new Date((serial - 25569) * 86400 * 1000);\n  return date.toISOString().split('T')[0];\n};\n\n// Pull profile\nconst profileRows = $('2a-SP. Read Profile Tab').all().map(i => i.json);\nconst profile = {};\nprofileRows.forEach(row => {\n  if (row['key'] && row['value']) {\n    profile[row['key'].trim()] = String(row['value']).trim();\n  }\n});\n\n// Pull Bloom's\nconst bloomsRows = $('2b-SP. Read Blooms Tab').all().map(i => i.json);\nconst bloomsText = bloomsRows.map(r =>\n  `${r['level']}: ${r['all_verbs'] || ''}`\n).join('\\n');\n\n// Pull strategies\nconst stratRows = $('2c-SP. Read Strategies Tab').all().map(i => i.json);\nconst strategiesText = stratRows.map(r =>\n  `- ${r['strategy']}: ${r['description']} (Best for: ${r['best_for']})`\n).join('\\n');\n\n// Form fields\n// Extract unit code and title from dropdown selection (format: \"CODE — Title\")\nconst unitTitle   = form['_unit_title_clean'] || '';\nconst unitCode    = form['_unit_code_clean'] || '';\n\nconst className   = form['_class_name'] || f('Class Name');  // ← use _class_name\nconst numLearners     = String(f('Number of Learners'));\n\n// Extract week number — already a number, no replace needed\nconst weekNo = f('Week Number');\n\n// Session date — use pre-extracted raw value from Extract Form Fields node\nconst sessionDate = excelDateToString(form['_session_date_raw'] || f('Session Date (date picker)'));\n\nconst sessionTime     = f('Session Time');\nconst sessionNo = form['_session_no'] || '';\nconst sessionHints    = f('Session Topic Hints');\n// This goes BEFORE the prompt template\nconst lpRows = $('Fetch LP Context').all().map(i => i.json);\nconst lpContext = lpRows.length > 0\n  ? `Outcomes: ${lpRows[0].outcomes}\\nKey Points: ${lpRows[0].key_points}\\nActivities: ${lpRows[0].activities}\\nResources: ${lpRows[0].resources}\\nAssessment: ${lpRows[0].assessment}`\n  : 'No LP context found — generate based on session title and topic hints only.';\n\nconst sessionTitle = (lpRows.length > 0 ? lpRows[0].session_title : null) || f('Session Title') || '';\n\n\nconst llnReq          = f('LLN Requirements') || 'N/A';\nconst specialInstr    = f('Special Instructions for AI') || 'None';\n\n// ============================================================\n// PROMPT 1 — SESSION PLAN ONLY\n// ============================================================\nconst promptSP = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write in formal, assessor-ready language aligned to KSTVET standards.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\nDo NOT use markdown formatting in any field values. No ##, no **, no *, no -- bullets.\nFor section headings use CAPS. For lists use numbers (1. 2. 3.) or letters (a. b. c.).\nWrite in flowing, formal prose where possible. This content goes into Google Docs directly.\n\n=== BLOOM'S TAXONOMY VERBS ===\n${bloomsText}\n\nFor Level 6, PREFER verbs from levels 3-6 (Applying, Analysing, Evaluating, Creating).\n\n=== ACTIVE LEARNING STRATEGIES ===\n${strategiesText}\n\nAlways name the specific strategy used. Each step must use a named strategy.\n\n=== LEARNING PLAN CONTEXT (this SP must align with this LP) ===\n${lpContext}\n\n=== TEACHER INPUT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLearners: ${numLearners}\nWeek: ${weekNo}\nSession Number: ${sessionNo}\nSession Title from LP: ${lpRows.length > 0 ? lpRows[0].session_title : sessionTitle}\nSession Topic Hints: ${sessionHints}\nLLN Requirements: ${llnReq}\nSpecial Instructions: ${specialInstr}\n\n=== SESSION STRUCTURE ===\nGenerate TWO sessions of 90 minutes each on the SAME topic.\nSplit the LP outcomes logically across the two sessions.\nSession 1 covers the foundational outcomes.\nSession 2 builds on Session 1 and covers the remaining outcomes.\n\nSESSION 1 (90 minutes):\n- Introduction: 10 mins (attendance, recap, bridge-in)\n- Step 1: 25 mins\n- Step 2: 25 mins\n- Step 3: 25 mins\n- Review: 5 mins\n\nSESSION 2 (90 minutes):\n- Introduction: 10 mins (recap of Session 1, bridge to Session 2)\n- Step 1: 25 mins\n- Step 2: 25 mins\n- Step 3: 25 mins\n- Review: 5 mins\n\nTotal: 180 minutes across both sessions.\nEach step must name the specific active learning strategy used.\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON. All values must be strings.\n\n{\n  \"learning_outcomes\": \"All outcomes for both sessions combined. Each on new line starting with dash. Bloom's verbs.\",\n  \"references\": \"2-3 APA formatted references\",\n  \"learning_aids\": \"3-5 physical or digital learning aids\",\n  \"safety_requirements\": \"relevant safety requirements\",\n\n  \"intro_activity_1\": \"Session 1 introduction — attendance, recap previous session, bridge-in to today's topic\",\n  \"step1_trainer_1\": \"Session 1 Step 1 trainer activity with named strategy\",\n  \"step1_trainee_1\": \"Session 1 Step 1 trainee activity\",\n  \"step1_time_1\": \"25 mins\",\n  \"step2_trainer_1\": \"Session 1 Step 2 trainer activity with named strategy\",\n  \"step2_trainee_1\": \"Session 1 Step 2 trainee activity\",\n  \"step2_time_1\": \"25 mins\",\n  \"step3_trainer_1\": \"Session 1 Step 3 trainer activity with named strategy\",\n  \"step3_trainee_1\": \"Session 1 Step 3 trainee activity\",\n  \"step3_time_1\": \"25 mins\",\n  \"session_review_1\": \"Session 1 review — how trainer and trainees summarise. Exit ticket or quick check.\",\n  \"follow_up_1\": \"Session 1 follow up activity or homework\",\n\n  \"intro_activity_2\": \"Session 2 introduction — recap Session 1 key points, bridge to Session 2 content\",\n  \"step1_trainer_2\": \"Session 2 Step 1 trainer activity with named strategy\",\n  \"step1_trainee_2\": \"Session 2 Step 1 trainee activity\",\n  \"step1_time_2\": \"25 mins\",\n  \"step2_trainer_2\": \"Session 2 Step 2 trainer activity with named strategy\",\n  \"step2_trainee_2\": \"Session 2 Step 2 trainee activity\",\n  \"step2_time_2\": \"25 mins\",\n  \"step3_trainer_2\": \"Session 2 Step 3 trainer activity with named strategy\",\n  \"step3_trainee_2\": \"Session 2 Step 3 trainee activity\",\n  \"step3_time_2\": \"25 mins\",\n  \"session_review_2\": \"Session 2 review — final summary of both sessions combined. Revisit all outcomes.\",\n  \"follow_up_2\": \"Session 2 follow up — extended activity linking to next week's LP\",\n\n  \"total_time\": \"180 mins\"\n}\n`;\n\nreturn [{\n  json: {\n    prompt_sp: promptSP,\n    // all pass-through fields stay the same\n    unit_title: unitTitle,\n    unit_code: unitCode,\n    class_name: className,\n    num_learners: numLearners,\n    week_no: weekNo,\n    session_date: sessionDate,\n    session_time: sessionTime,\n    session_title: sessionTitle,\n    trainer_name: profile['trainer_name'] || '',\n    admission_no: profile['admission_no'] || '',\n    institution: profile['institution'] || '',\n    level: profile['level'] || '6',\n    template_doc_id: profile['session_plan_template_id'] || '',\n    output_folder_id: profile['output_folder_id'] || '',\n    date_prepared: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })\n  }\n}];"
+        "jsCode": "// ============================================================\n// NODE 3b — BUILD SESSION PLAN GEMINI PROMPT\n// ============================================================\n\nconst form = $('Extract Form Fields').first().json;\n\nconsole.log('All keys:', JSON.stringify(Object.keys(form)));\nconsole.log('Session date raw:', JSON.stringify(form));\n\n\n\n// Same helper functions from LP\nconst f = (key) => {\n  const nonEmptyMatch = Object.keys(form).find(k =>\n    k.trim() === key.trim() && String(form[k]).trim() !== ''\n  );\n  if (nonEmptyMatch) return String(form[nonEmptyMatch]).trim();\n  const anyMatch = Object.keys(form).find(k => k.trim() === key.trim());\n  return anyMatch ? String(form[anyMatch] || '').trim() : '';\n};\n\nconst excelDateToString = (serial) => {\n  if (!serial || isNaN(serial)) return String(serial || '');\n  const date = new Date((serial - 25569) * 86400 * 1000);\n  return date.toISOString().split('T')[0];\n};\n\n// Pull profile\nconst profileRows = $('2a-SP. Read Profile Tab').all().map(i => i.json);\nconst profile = {};\nprofileRows.forEach(row => {\n  if (row['key'] && row['value']) {\n    profile[row['key'].trim()] = String(row['value']).trim();\n  }\n});\n\n// Pull Bloom's\nconst bloomsRows = $('2b-SP. Read Blooms Tab').all().map(i => i.json);\nconst bloomsText = bloomsRows.map(r =>\n  `${r['level']}: ${r['all_verbs'] || ''}`\n).join('\\n');\n\n// Pull strategies\nconst stratRows = $('2c-SP. Read Strategies Tab').all().map(i => i.json);\nconst strategiesText = stratRows.map(r =>\n  `- ${r['strategy']}: ${r['description']} (Best for: ${r['best_for']})`\n).join('\\n');\n\n// Form fields\n// Extract unit code and title from dropdown selection (format: \"CODE — Title\")\nconst unitTitle   = form['_unit_title_clean'] || '';\nconst unitCode    = form['_unit_code_clean'] || '';\n\nconst className   = form['_class_name'] || f('Class Name');  // ← use _class_name\nconst numLearners     = String(f('Number of Learners'));\n\n// Extract week number — already a number, no replace needed\nconst weekNo = f('Week Number');\n\n// Session date — use pre-extracted raw value from Extract Form Fields node\nconst sessionDate = excelDateToString(form['_session_date_raw'] || f('Session Date (date picker)'));\n\nconst sessionTime     = f('Session Time');\nconst sessionNo = form['_session_no'] || f('Session Number') || '';\nconst sessionHints    = f('Session Topic Hints');\n// This goes BEFORE the prompt template\n// Try webhook LP context first, fall back to Fetch LP Context\nconst lpFromWebhook = form['LP Outcomes and Key Points'] || '';\n\nconst lpRows = (() => {\n  try {\n    return $('Fetch LP Context').all().map(i => i.json);\n  } catch(e) {\n    return [];\n  }\n})();\n\nconst lpData = lpRows.length > 0 ? lpRows[0] : {};\n\nconst lpContext = lpFromWebhook || (lpRows.length > 0\n  ? `Outcomes: ${lpData.outcomes}\\nKey Points: ${lpData.key_points}\\nActivities: ${lpData.activities}\\nResources: ${lpData.resources}\\nAssessment: ${lpData.assessment}`\n  : 'No LP context — generate based on session title and topic hints only.');\n\nconst sessionTitle = (lpRows.length > 0 ? lpRows[0].session_title : null) || f('Session Title') || '';\n\n\nconst llnReq          = f('LLN Requirements') || 'N/A';\nconst specialInstr    = f('Special Instructions for AI') || 'None';\n\n// ============================================================\n// PROMPT 1 — SESSION PLAN ONLY\n// ============================================================\nconst promptSP = `\nYou are an expert curriculum developer for TVET/college-level education in Kenya.\nYou write in formal, assessor-ready language aligned to KSTVET standards.\nYou MUST respond with valid JSON only. No explanation, no markdown, no preamble.\nDo NOT use markdown formatting in any field values. No ##, no **, no *, no -- bullets.\nFor section headings use CAPS. For lists use numbers (1. 2. 3.) or letters (a. b. c.).\nWrite in flowing, formal prose where possible. This content goes into Google Docs directly.\n\n=== BLOOM'S TAXONOMY VERBS ===\n${bloomsText}\n\nFor Level 6, PREFER verbs from levels 3-6 (Applying, Analysing, Evaluating, Creating).\n\n=== ACTIVE LEARNING STRATEGIES ===\n${strategiesText}\n\nAlways name the specific strategy used. Each step must use a named strategy.\n\n=== LEARNING PLAN CONTEXT (this SP must align with this LP) ===\n${lpContext}\n\n=== TEACHER INPUT ===\nUnit Title: ${unitTitle}\nUnit Code: ${unitCode}\nClass: ${className}\nLearners: ${numLearners}\nWeek: ${weekNo}\nSession Number: ${sessionNo}\nSession Title from LP: ${lpRows.length > 0 ? lpRows[0].session_title : sessionTitle}\nSession Topic Hints: ${sessionHints}\nLLN Requirements: ${llnReq}\nSpecial Instructions: ${specialInstr}\n\n=== SESSION STRUCTURE ===\nGenerate TWO sessions of 90 minutes each on the SAME topic.\nSplit the LP outcomes logically across the two sessions.\nSession 1 covers the foundational outcomes.\nSession 2 builds on Session 1 and covers the remaining outcomes.\n\nSESSION 1 (90 minutes):\n- Introduction: 10 mins (attendance, recap, bridge-in)\n- Step 1: 25 mins\n- Step 2: 25 mins\n- Step 3: 25 mins\n- Review: 5 mins\n\nSESSION 2 (90 minutes):\n- Introduction: 10 mins (recap of Session 1, bridge to Session 2)\n- Step 1: 25 mins\n- Step 2: 25 mins\n- Step 3: 25 mins\n- Review: 5 mins\n\nTotal: 180 minutes across both sessions.\nEach step must name the specific active learning strategy used.\n\nCRITICAL ASSESSOR REQUIREMENTS — MUST FOLLOW ALL:\n1. Use ONLY these 6 strategies: Jigsaw, Think-Pair-Share, Meet Your Match, Give One Get One, Numbered Heads Together, Round Robin\n2. Each session must use MINIMUM 3 DIFFERENT strategies — NEVER repeat in same session\n3. Each step must directly reference specific LP key points — state which key point is being covered\n4. Trainee activities must be SPECIFIC — state exactly what trainees do, write, produce, or submit\n5. Follow-up assignment must include: clear task, word count or marks (e.g. 10 marks), and due date\n6. Introduction must include ALL FIVE: attendance, motivational hook, Q&A recap of previous session (2-3 specific questions), state outcomes, explain career relevance\n\n=== OUTPUT FORMAT ===\nReturn ONLY this JSON. All values must be strings.\n\n{\n  \"learning_outcomes\": \"All outcomes for both sessions combined. Each on new line starting with dash. Bloom's verbs.\",\n  \"references\": \"2-3 APA formatted references\",\n  \"learning_aids\": \"3-5 physical or digital learning aids\",\n  \"safety_requirements\": \"relevant safety requirements\",\n\n  \"intro_activity_1\": \"Must include ALL five elements: 1. Take attendance. 2. Motivational hook — a real-life question or scenario relevant to Kenyan context. 3. Recap previous session using Q&A — ask 2-3 specific questions from last session. 4. State session title and all learning outcomes clearly. 5. Explain relevance of this session to trainees future careers.\",\n\n  \"step1_trainer_1\": \"Session 1 Step 1 trainer activity with named strategy\",\n  \"step1_trainee_1\": \"Session 1 Step 1 trainee activity\",\n  \"step1_time_1\": \"25 mins\",\n  \"step2_trainer_1\": \"Session 1 Step 2 trainer activity with named strategy\",\n  \"step2_trainee_1\": \"Session 1 Step 2 trainee activity\",\n  \"step2_time_1\": \"25 mins\",\n  \"step3_trainer_1\": \"Session 1 Step 3 trainer activity with named strategy\",\n  \"step3_trainee_1\": \"Session 1 Step 3 trainee activity\",\n  \"step3_time_1\": \"25 mins\",\n  \"session_review_1\": \"Session 1 review — how trainer and trainees summarise. Exit ticket or quick check.\",\n  \"follow_up_1\": \"Specific assignment with: clear task description, measurable output (word count or marks), and due date. \",\n\n\n  \"intro_activity_2\": \"Must include ALL five elements: 1. Quick attendance check. 2. Recap Session 1 key points using Q&A — ask 2-3 specific questions. 3. Bridge to Session 2 — explain how Session 1 leads into Session 2 content. 4. Restate Session 2 outcomes. 5. Motivate trainees with a real-world application of what they will learn.\",\n  \"step1_trainer_2\": \"Session 2 Step 1 trainer activity with named strategy\",\n  \"step1_trainee_2\": \"Session 2 Step 1 trainee activity\",\n  \"step1_time_2\": \"25 mins\",\n  \"step2_trainer_2\": \"Session 2 Step 2 trainer activity with named strategy\",\n  \"step2_trainee_2\": \"Session 2 Step 2 trainee activity\",\n  \"step2_time_2\": \"25 mins\",\n  \"step3_trainer_2\": \"Session 2 Step 3 trainer activity with named strategy\",\n  \"step3_trainee_2\": \"Session 2 Step 3 trainee activity\",\n  \"step3_time_2\": \"25 mins\",\n  \"session_review_2\": \"Session 2 review — final summary of both sessions combined. Revisit all outcomes.\",\n  \"follow_up_2\": \"Specific assignment linking both sessions. Must include task, marks allocation, and due date.\",\n\n  \"total_time\": \"180 mins\"\n}\n`;\n\nreturn [{\n  json: {\n    prompt_sp: promptSP,\n    unit_title: unitTitle,\n    unit_code: unitCode,\n    class_name: className,\n    num_learners: numLearners,\n    week_no: weekNo,\n    session_date: sessionDate,\n    session_time: sessionTime,\n    session_title: sessionTitle,\n    session_no: sessionNo,        // ← add this line\n    trainer_name: profile['trainer_name'] || '',\n    admission_no: profile['admission_no'] || '',\n    institution: profile['institution'] || '',\n    level: profile['level'] || '6',\n    template_doc_id: profile['session_plan_template_id'] || '',\n    tn_template_doc_id: profile['student_notes_template_id'] || '',\n    output_folder_id: profile['output_folder_id'] || '',\n    date_prepared: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -240,
-        816
+        -2640,
+        1584
       ],
       "id": "9a624281-044d-4323-bc58-52cb660cd482",
       "name": "SP Node 3 — Code node"
@@ -531,8 +533,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -800,
-        672
+        -2160,
+        1040
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -565,8 +567,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -800,
-        832
+        -2160,
+        1184
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -599,8 +601,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -800,
-        1008
+        -2160,
+        1312
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -617,8 +619,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -528,
-        800
+        -1792,
+        1264
       ],
       "id": "f4372201-1b2c-4e7f-a215-6394827be002",
       "name": "Merge-SP"
@@ -631,7 +633,7 @@
           "value": "={{ $json._template_doc_id }}",
           "mode": "id"
         },
-        "name": "==SP - {{ $('Fetch LP Context').item.json.unit_title }} - Week {{ $json._week_no }} - Session {{ $('Fetch LP Context').item.json.session_no }}",
+        "name": "==SP - {{ $('SP Node 3 — Code node').item.json.unit_title }} - Week {{ $json._week_no }} - Session    {{ $('SP Node 3 — Code node').item.json.session_no }}",
         "sameFolder": false,
         "driveId": {
           "__rl": true,
@@ -652,8 +654,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        672,
-        672
+        -1840,
+        1584
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -670,8 +672,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        960,
-        672
+        -2640,
+        2080
       ],
       "id": "b3d6fc91-6f9e-4a45-a395-e3c9cf7f2d5c",
       "name": "SP Node 7a"
@@ -685,8 +687,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        432,
-        672
+        -2064,
+        1584
       ],
       "notes": "This node extracts all AI-generated content and maps it to the exact placeholder names used in your Google Doc template."
     },
@@ -713,8 +715,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1264,
-        672
+        -2416,
+        2080
       ],
       "id": "495ede36-1b4a-464c-8ce5-bb8799277e2d",
       "name": "Node 7b — HTTP Request node1",
@@ -751,7 +753,7 @@
           "value": {
             "A — Date Generated": "={{ $now.format('dd-MMM-yyyy') }}",
             "B — Class": "={{ $('SP Node 3 — Code node').first().json.class_name }}",
-            "C — Unit Title": "={{ $('Fetch LP Context').item.json.unit_title }}",
+            "C — Unit Title": "={{ $('SP Node 3 — Code node').item.json.unit_title }}",
             "D — Week": "={{ $('SP Node 3 — Code node').first().json.week_no }}",
             "E — Doc Type": "Session Plan",
             "F — Link": "=https://docs.google.com/document/d/{{ $('SP Node 6b').first().json.id }}/edit"
@@ -826,8 +828,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        1792,
-        624
+        -2192,
+        1984
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -858,8 +860,8 @@
       "type": "n8n-nodes-base.googleCalendar",
       "typeVersion": 1.2,
       "position": [
-        1776,
-        848
+        -2192,
+        2176
       ],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -883,8 +885,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        48,
-        512
+        32,
+        -240
       ],
       "id": "67c3fdda-7bf0-479f-920b-826bbcab242a",
       "name": "Deepseek Chat Model1",
@@ -924,8 +926,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        656,
-        1152
+        368,
+        96
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -942,8 +944,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        928,
-        1152
+        640,
+        96
       ],
       "id": "15f2e4c2-0056-479c-9b7c-935a1608b947",
       "name": "TN Node 7a"
@@ -971,8 +973,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1248,
-        1152
+        960,
+        96
       ],
       "id": "6f4d8bc9-f257-4bd4-92ff-49a4a4541355",
       "name": "TN Node 7b",
@@ -1084,8 +1086,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        1760,
-        1056
+        1472,
+        0
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1116,8 +1118,8 @@
       "type": "n8n-nodes-base.googleCalendar",
       "typeVersion": 1.2,
       "position": [
-        1760,
-        1280
+        1472,
+        224
       ],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -1141,8 +1143,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        32,
-        1328
+        -256,
+        272
       ],
       "id": "079ce783-469f-460a-887e-7c6db79b5be6",
       "name": "Deepseek Chat Model",
@@ -1162,8 +1164,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        48,
-        1152
+        -240,
+        96
       ],
       "id": "7b1bd814-b89c-46b1-8a51-54628c8ef3b7",
       "name": "LLM Chain — TN"
@@ -1177,8 +1179,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        432,
-        1152
+        144,
+        96
       ],
       "notes": "This node extracts all AI-generated content and maps it to the exact placeholder names used in your Google Doc template."
     },
@@ -1187,8 +1189,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2368,
-        864
+        -1968,
+        2080
       ],
       "id": "0bdaaade-c259-4fae-ae7f-88ebde1439a1",
       "name": "End Merge"
@@ -1198,8 +1200,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2144,
-        320
+        2128,
+        -432
       ],
       "id": "efe1db90-f572-4e02-8461-a104d5eed54d",
       "name": "End Merge LP"
@@ -1213,8 +1215,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        32,
-        672
+        -2432,
+        1520
       ],
       "id": "dd9c881e-a202-4a6c-9283-c29a5c76ed36",
       "name": "Basic LLM Chain1"
@@ -1233,8 +1235,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        32,
-        848
+        -2432,
+        1680
       ],
       "id": "3beb78a7-4532-429d-91c6-0f06892c7ed4",
       "name": "Deepseek Chat Model2",
@@ -1265,7 +1267,7 @@
           "values": [
             {
               "lookupColumn": "unit_code",
-              "lookupValue": "={{ $('1. Form Response Trigger').first().json['Unit Code/Title'].split('—')[0].trim() }}"
+              "lookupValue": "={{ $json._unit_code_clean }}"
             },
             {
               "lookupColumn": "week",
@@ -1282,8 +1284,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -1216,
-        688
+        -2432,
+        1264
       ],
       "id": "91e820eb-80f1-4eb3-93c7-467453d7ffa7",
       "name": "Fetch LP Context",
@@ -1296,13 +1298,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const form = $input.first().json;\n\n// Skip if already processed\nif (form['Status'] === 'done') {\n  return [];\n}\n\n// Helper that trims spaces from both key and value\nconst f = (key) => {\n  const match = Object.keys(form).find(k => k.trim() === key.trim());\n  return match ? String(form[match] || '').trim() : '';\n};\n\n// Unit code and title from dropdown\nconst unitCodeTitleRaw = f('Unit Code/Title');\nconst unitCode = unitCodeTitleRaw.includes('—')\n  ? unitCodeTitleRaw.split('—')[0].trim()\n  : unitCodeTitleRaw.trim();\nconst unitTitle = unitCodeTitleRaw.includes('—')\n  ? unitCodeTitleRaw.split('—')[1].trim()\n  : '';\n\nreturn [{\n  json: {\n    ...form,\n    _document_type:    f('Document Type'),\n    _unit_code_clean:  unitCode,\n    _unit_title_clean: unitTitle,\n    _week_no_clean:    String(f('Week Number') || ''),\n    _session_no:       f('Session Number'),\n    _session_date_raw: f('Session Date (date picker)'),\n    _session_time:     f('Session Time'),\n    _lln_requirements: f('LLN Requirements'),\n    _class_name:       f('Class Name'),        // ← add this\n  }\n}];"
+        "jsCode": "const form = $input.first().json.body || $input.first().json;\nconsole.log('jobId:', form['_jobId'], '| callbackUrl:', form['_callbackUrl']);\n\n// Skip if already processed\nif (form['Status'] === 'done') {\n  return [];\n}\n\n// Helper that trims spaces from both key and value\nconst f = (key) => {\n  const match = Object.keys(form).find(k => k.trim() === key.trim());\n  return match ? String(form[match] || '').trim() : '';\n};\n\n// Unit code and title from dropdown\nconst unitCodeTitleRaw = f('Unit Code/Title');\nconst unitCode = unitCodeTitleRaw.includes('—')\n  ? unitCodeTitleRaw.split('—')[0].trim()\n  : unitCodeTitleRaw.trim();\nconst unitTitle = unitCodeTitleRaw.includes('—')\n  ? unitCodeTitleRaw.split('—')[1].trim()\n  : '';\n\nreturn [{\n  json: {\n    ...form,\n    _document_type:    f('Document Type'),\n    _unit_code_clean:  unitCode,\n    _unit_title_clean: unitTitle,\n    _week_no_clean:    String(f('Week Number') || ''),\n    _session_no:       f('Session Number'),\n    _session_date_raw: f('Session Date (date picker)') || f('Session Date') || '',\n    _session_time:     f('Session Time') || f('  Session Time  ') || '',\n    _class_name:       f('Class Name') || '',\n    _lln_requirements: f('LLN Requirements') || f('  LLN Requirements  ') || '',      // ← add this\n    _callbackUrl: form['_callbackUrl'] || (form.body && form.body._callbackUrl) || '',\n    _jobId:       form['_jobId'] || (form.body && form.body._jobId) || '',\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1648,
-        704
+        -1984,
+        848
       ],
       "id": "f0439777-3c7d-4b99-b5cf-8d08678a8ba9",
       "name": "Extract Form Fields"
@@ -1314,8 +1316,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -224,
-        1072
+        -512,
+        16
       ],
       "id": "0982f1df-6eec-42d0-a801-888c0255b0e4",
       "name": "TN Node 3"
@@ -1325,282 +1327,149 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2384,
-        1136
+        2096,
+        80
       ],
       "id": "c3d59cbf-bc8d-42f8-a2e4-eddd40155ae2",
       "name": "End Merge1"
     },
     {
       "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "1Ww5nPQTclaYsZsTxF4_fBjbv0nBnsPN3eDCw_7pIj2M",
-          "mode": "list",
-          "cachedResultName": "Learning Plan Generator  (Responses)",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ww5nPQTclaYsZsTxF4_fBjbv0nBnsPN3eDCw_7pIj2M/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1323607723,
-          "mode": "list",
-          "cachedResultName": "Form Responses 1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ww5nPQTclaYsZsTxF4_fBjbv0nBnsPN3eDCw_7pIj2M/edit#gid=1323607723"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "row_number": "=",
-            "Timestamp": "={{ $('1. Form Response Trigger').first().json['Timestamp'] }}",
-            "Status": "=Done"
+        "httpMethod": "POST",
+        "path": "=teacher-workflow",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2432,
+        848
+      ],
+      "id": "408ec82f-4e08-4fd0-a066-4b21932ba863",
+      "name": "Webhook",
+      "webhookId": "823cf3db-8052-4b64-b962-d7c3dd89773e"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
           },
-          "matchingColumns": [
-            "Timestamp"
-          ],
-          "schema": [
+          "conditions": [
             {
-              "id": "Timestamp",
-              "displayName": "Timestamp",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Unit Title",
-              "displayName": "Unit Title",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Unit Code ",
-              "displayName": "Unit Code ",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Class Name",
-              "displayName": "Class Name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Number of Learners",
-              "displayName": "Number of Learners",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Week Number",
-              "displayName": "Week Number",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Date of Week (Monday) ",
-              "displayName": "Date of Week (Monday) ",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Skill or Job Task",
-              "displayName": "Skill or Job Task",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Raw Learning Objectives",
-              "displayName": "Raw Learning Objectives",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Session 1 Title ",
-              "displayName": "Session 1 Title ",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Session 1 — Topic Hints",
-              "displayName": "Session 1 — Topic Hints",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Session 2 Title",
-              "displayName": "Session 2 Title",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Session 2 — Topic Hints ",
-              "displayName": "Session 2 — Topic Hints ",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Special Instructions for AI",
-              "displayName": "Special Instructions for AI",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "  Document Type  ",
-              "displayName": "  Document Type  ",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Session Date (date picker) ",
-              "displayName": "Session Date (date picker) ",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "  Session Time  ",
-              "displayName": "  Session Time  ",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "  LLN Requirements  ",
-              "displayName": "  LLN Requirements  ",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Unit Code/Title",
-              "displayName": "Unit Code/Title",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Session Number",
-              "displayName": "Session Number",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Column 19",
-              "displayName": "Column 19",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Column 16",
-              "displayName": "Column 16",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Status",
-              "displayName": "Status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "readOnly": true,
-              "removed": false
+              "id": "ad28bedb-e9b0-48b4-b2aa-f9fcff8c9e8a",
+              "leftValue": "={{ $json['LP Outcomes and Key Points'] !== undefined && $json['LP Outcomes and Key Points'] !== '' }}",
+              "rightValue": "==true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
+          "combinator": "and"
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
       "position": [
-        2576,
-        864
+        -2640,
+        1248
       ],
-      "id": "dd0a98a7-7738-4463-b445-726014a8b12c",
-      "name": "Mark as Processed",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "Huocm4PRnpE0Qbwx",
-          "name": "Google Sheets account"
-        }
-      }
+      "id": "93d2bb74-f8c6-4d1b-89eb-4137205ec35d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Extract Form Fields').item.json._callbackUrl }}\n",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jobId\": \"{{ $('Extract Form Fields').item.json._jobId }}\",\n  \"documents\": [\n    {\n      \"type\": \"Session Plan\",\n      \"name\": \"SP - {{ $('SP Node 3 — Code node').first().json.class_name }} - Week {{ $('SP Node 3 — Code node').first().json.week_no }}\",\n      \"url\": \"https://docs.google.com/document/d/{{ $('SP Node 6b').first().json.id }}/edit\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1712,
+        2080
+      ],
+      "id": "17274f3e-d07f-41e8-a02c-b46a9d8c7ad2",
+      "name": "Callback to Web App"
     }
   ],
-  "pinData": {},
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "perfoliate-callan-labelloid.ngrok-free.dev",
+            "user-agent": "axios/1.16.1",
+            "content-length": "1858",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "154.159.237.23",
+            "x-forwarded-host": "perfoliate-callan-labelloid.ngrok-free.dev",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "Document Type": "Session Plan",
+            "Unit Code/Title": "IT/CU/ICT/CR/1/6 — Performing Computer Networking",
+            "Class Name": "ICT module 2",
+            "Number of Learners": "11",
+            "Week Number": "6",
+            "Session Number": "21",
+            "Session Date": "2026-06-02",
+            "Session Time": "8-11AM",
+            "Session Title": "Network Type Identification and Component Assembly",
+            "Session Topic Hints": "NETWORK TYPE DETERMINATION\n\n- Analyzing network design documents to identify required network types (LAN, WAN, etc.)\n\n- Matching business needs with appropriate network architectures\n\nCOMPONENT & MEDIA ASSEMBLY FOR LAN\n\n- Selecting appropriate switches, routers, and cabling for a LAN\n\n- Physical assembly and connection of LAN components",
+            "LP Outcomes and Key Points": "Outcomes: By the end of the session, the trainee should be able to:\n\na. Identify appropriate network types based on design specifications.\n\nb. Assemble prerequisite components and media for specific network types.\nKey Points: NETWORK TYPE DETERMINATION\n\n- Analyzing network design documents to identify required network types (LAN, WAN, etc.)\n\n- Matching business needs with appropriate network architectures\n\nCOMPONENT & MEDIA ASSEMBLY FOR LAN\n\n- Selecting appropriate switches, routers, and cabling for a LAN\n\n- Physical assembly and connection of LAN components\nActivities: - Work through Case Studies to identify appropriate network types for different organizational needs.\n\n- Engage in Demonstrations with Participation to assemble prerequisite components and media for a given LAN scenario.\n\n- Participate in a Group Discussion to explain the selection criteria for network components for a WAN.\n\nFollow up Activity:\n\n1. Given a new office layout, propose a network type and list all necessary components and media for its implementation. (10 Marks)\n\nDue date:",
+            "LLN Requirements": "",
+            "Special Instructions for AI": ""
+          },
+          "webhookUrl": "https://perfoliate-callan-labelloid.ngrok-free.dev/webhook/teacher-workflow",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Extract Form Fields": [
+      {
+        "json": {
+          "Document Type": "Session Plan",
+          "Unit Code/Title": "IT/OS/ICTA/CR/03/4/MA— Performing Computer Networking",
+          "Class Name": "ICT module 2",
+          "Number of Learners": "12",
+          "Week Number": "7",
+          "Session Number": "27&28",
+          "Session Date": "2026-06-17",
+          "Session Time": "8-11AM",
+          "Session Title": "Introduction to Network Security and Threats",
+          "Session Topic Hints": "Session 1 Key Points:\nNETWORK SECURITY DEFINITION\n\n- Definition of network security and its core principles (confidentiality, integrity, availability)\n\n- Importance of securing network infrastructure\n\nINTERNAL NETWORK THREATS\n\n- Insider threats (e.g., disgruntled employees, accidental data leakage)\n\n- Misconfigurations and weak passwords within the network\n\nSession 2 Key Points:\nINTERNAL NETWORK THREATS\n\n- Insider threats (e.g., disgruntled employees, accidental data leakage)\n\n- Misconfigurations and weak passwords within the network\n\nEXTERNAL NETWORK THREATS\n\n- Malware (viruses, worms, ransomware), phishing attacks\n\n- Distributed Denial of Service (DDoS) attacks, brute-force attacks",
+          "LP Outcomes and Key Points": "Session 1 Outcomes: By the end of the session, the trainee should be able to:\n\na. Define network security and its objectives.\n\nb. Identify common internal and external network threats.\nSession 1 Key Points: NETWORK SECURITY DEFINITION\n\n- Definition of network security and its core principles (confidentiality, integrity, availability)\n\n- Importance of securing network infrastructure\n\nINTERNAL NETWORK THREATS\n\n- Insider threats (e.g., disgruntled employees, accidental data leakage)\n\n- Misconfigurations and weak passwords within the network\nSession 1 Activities: - Engage in a Think-Pair-Share activity to define network security and its importance.\n\n- Participate in a Brainstorming session to identify common internal and external network threats.\n\n- Work through Case Studies on recent cyberattacks to explain the impact of various network threats.\n\nFollow up Activity:\n\n1. Research a significant cyberattack incident from the last year and summarize its nature, impact, and lessons learned. (10 Marks)\n\nDue date:\n\nSession 2 Outcomes: By the end of the session, the trainee should be able to:\n\nb. Identify common internal and external network threats.\n\nc. Explain the impact of various network threats.\nSession 2 Key Points: INTERNAL NETWORK THREATS\n\n- Insider threats (e.g., disgruntled employees, accidental data leakage)\n\n- Misconfigurations and weak passwords within the network\n\nEXTERNAL NETWORK THREATS\n\n- Malware (viruses, worms, ransomware), phishing attacks\n\n- Distributed Denial of Service (DDoS) attacks, brute-force attacks\nSession 2 Activities: - Engage in a Think-Pair-Share activity to define network security and its importance.\n\n- Participate in a Brainstorming session to identify common internal and external network threats.\n\n- Work through Case Studies on recent cyberattacks to explain the impact of various network threats.\n\nFollow up Activity:\n\n1. Research a significant cyberattack incident from the last year and summarize its nature, impact, and lessons learned. (10 Marks)\n\nDue date:",
+          "LLN Requirements": "",
+          "Special Instructions for AI": "",
+          "_jobId": "job_1781459700124_xskkcotwk",
+          "_callbackUrl": "http://host.docker.internal:3000/api/callback",
+          "_document_type": "Session Plan",
+          "_unit_code_clean": "IT/OS/ICTA/CR/03/4/MA",
+          "_unit_title_clean": "Performing Computer Networking",
+          "_week_no_clean": "7",
+          "_session_no": "27&28",
+          "_session_date_raw": "2026-06-17",
+          "_session_time": "8-11AM",
+          "_class_name": "ICT module 2",
+          "_lln_requirements": ""
+        }
+      }
+    ]
+  },
   "connections": {
     "2a. Read Profile Tab": {
       "main": [
@@ -1670,13 +1539,7 @@
     },
     "1. Form Response Trigger": {
       "main": [
-        [
-          {
-            "node": "Switch (Document Type)",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Merge": {
@@ -1730,23 +1593,7 @@
     },
     "Switch (Document Type)": {
       "main": [
-        [
-          {
-            "node": "2a. Read Profile Tab",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "2b. Read Blooms Tab",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "2c. Read Strategies Tab",
-            "type": "main",
-            "index": 0
-          }
-        ],
+        [],
         [
           {
             "node": "Extract Form Fields",
@@ -1794,11 +1641,6 @@
         [
           {
             "node": "SP Node 3 — Code node",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "TN Node 3",
             "type": "main",
             "index": 0
           }
@@ -2060,7 +1902,7 @@
       "main": [
         [
           {
-            "node": "Fetch LP Context",
+            "node": "If",
             "type": "main",
             "index": 0
           }
@@ -2082,7 +1924,46 @@
       "main": [
         [
           {
-            "node": "Mark as Processed",
+            "node": "Callback to Web App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch (Document Type)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "2a-SP. Read Profile Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2b-SP. Read Blooms Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "2c-SP. Read Strategies Tab",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch LP Context",
             "type": "main",
             "index": 0
           }
@@ -2090,12 +1971,17 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
-  "versionId": "ad9a78a0-a6de-4248-9ebc-75002051c50e",
+  "versionId": "27ce59e6-67a3-426e-9e2b-73c618c90904",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "105873a0e32e3c0a6d5d9f87c5dde92f4ed2f266a2db781ef0a25d96dc99deb8"
